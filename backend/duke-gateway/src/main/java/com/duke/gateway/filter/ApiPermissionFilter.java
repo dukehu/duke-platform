@@ -54,10 +54,10 @@ public class ApiPermissionFilter implements GlobalFilter, Ordered {
             "/swagger-ui.html",
             "/swagger-ui/**",
             "/v3/api-docs/**",
-            // 聚合下游服务 API 文档的路由
-            "/swagger-auth/**",
-            "/swagger-transformer/**",
-            "/swagger-knowledge-qa/**"
+            // 服务 API 文档（通过业务路由聚合）
+            "/api/auth/v3/api-docs/**",
+            "/api/transformer/v3/api-docs/**",
+            "/api/knowledge-qa/v3/api-docs/**"
     );
 
     @Override
