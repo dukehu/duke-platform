@@ -28,3 +28,4 @@ swagger:
   description: 企业级私有知识库问答系统接口文档
   version: 1.0.0
   enable-security: true
+  server-url: http://localhost:8080/api/knowledge-qa

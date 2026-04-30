@@ -29,3 +29,4 @@ swagger:
   description: 企业级 RBAC 权限管理系统接口文档
   version: 1.0.0
   enable-security: true
+  server-url: http://localhost:8080/api/auth

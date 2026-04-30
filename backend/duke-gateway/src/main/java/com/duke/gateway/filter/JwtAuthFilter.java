@@ -57,10 +57,10 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
             "/swagger-ui.html",
             "/swagger-ui/**",
             "/v3/api-docs/**",
-            // API 文档聚合路由（转发下游服务的文档）
-            "/swagger-auth/**",
-            "/swagger-transformer/**",
-            "/swagger-knowledge-qa/**"
+            // 服务 API 文档（通过业务路由聚合）
+            "/api/auth/v3/api-docs/**",
+            "/api/transformer/v3/api-docs/**",
+            "/api/knowledge-qa/v3/api-docs/**"
     );
 
     // 需要从外部请求中剥离的敏感请求头，防止客户端伪造用户身份

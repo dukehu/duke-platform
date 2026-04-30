@@ -5,9 +5,11 @@ import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
+import io.swagger.v3.oas.models.servers.Server;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import java.util.List;
 
 @Configuration
 @EnableConfigurationProperties(SwaggerProperties.class)
@@ -26,6 +28,10 @@ public class SwaggerConfig {
                         .title(properties.getTitle())
                         .description(properties.getDescription())
                         .version(properties.getVersion()));
+
+        if (!properties.getServerUrl().isEmpty()) {
+            openAPI.servers(List.of(new Server().url(properties.getServerUrl())));
+        }
 
         if (properties.isEnableSecurity()) {
             openAPI.addSecurityItem(new SecurityRequirement().addList("Bearer"))

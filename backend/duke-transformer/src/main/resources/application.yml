@@ -32,3 +32,4 @@ swagger:
   description: Transformer 模型可视化和教学演示系统接口文档
   version: 1.0.0
   enable-security: false
+  server-url: http://localhost:8080/api/transformer

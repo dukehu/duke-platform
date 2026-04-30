@@ -86,6 +86,11 @@ public class QdrantVectorServiceImpl implements IQdrantVectorService {
     }
 
     @Override
+    public void deleteCollection(String collectionName) {
+        
+    }
+
+    @Override
     public void insertVector(String collectionName, String text) {
         log.info("Inserting vector {}", text);
         List<Points.PointStruct> points = new ArrayList<>();

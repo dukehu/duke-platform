@@ -8,6 +8,7 @@ public class SwaggerProperties {
     private String description = "";
     private String version = "1.0.0";
     private boolean enableSecurity = false;
+    private String serverUrl = "";
 
     public String getTitle() {
         return title;
@@ -39,5 +40,13 @@ public class SwaggerProperties {
 
     public void setEnableSecurity(boolean enableSecurity) {
         this.enableSecurity = enableSecurity;
+    }
+
+    public String getServerUrl() {
+        return serverUrl;
+    }
+
+    public void setServerUrl(String serverUrl) {
+        this.serverUrl = serverUrl;
     }
 }

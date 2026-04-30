@@ -23,12 +23,12 @@ public interface IQdrantVectorService {
      */
     CollectionInfoVO createCollection(VectorParamsDTO params);
 
-//    /**
-//     * 删除集合
-//     *
-//     * @param collectionName 集合名称
-//     */
-//    void deleteCollection(String collectionName);
+    /**
+     * 删除集合
+     *
+     * @param collectionName 集合名称
+     */
+    void deleteCollection(String collectionName);
 //
 //    /**
 //     * 检查集合是否存在
