@@ -1,0 +1,299 @@
+@use 'variables' as *;
+
+// ─── Reset & Base ─────────────────────────────────────────────────────────────
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body, #app {
+  height: 100%;
+  font-family: $font-family;
+  font-size: 14px;
+  color: $text-regular;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+// ─── Element Plus CSS Variables Override ─────────────────────────────────────
+:root {
+  --el-color-primary:          #{$color-primary};
+  --el-color-primary-light-3:  #7d93f9;
+  --el-color-primary-light-5:  #a7b6fb;
+  --el-color-primary-light-7:  #c8d2fd;
+  --el-color-primary-light-8:  #{$color-primary-light};
+  --el-color-primary-light-9:  #f5f7ff;
+  --el-color-primary-dark-2:   #{$color-primary-dark};
+
+  --el-border-radius-base:     #{$radius-md};
+  --el-border-radius-small:    #{$radius-sm};
+  --el-border-radius-round:    20px;
+
+  --el-font-size-base:         14px;
+  --el-font-size-small:        12px;
+
+  --el-text-color-primary:     #{$text-primary};
+  --el-text-color-regular:     #{$text-regular};
+  --el-text-color-secondary:   #{$text-secondary};
+  --el-text-color-placeholder: #{$text-placeholder};
+
+  --el-border-color:           #{$border-base};
+  --el-border-color-light:     #{$border-light};
+  --el-border-color-lighter:   #{$border-light};
+  --el-border-color-extra-light: #{$border-light};
+
+  --el-fill-color-blank:       #{$bg-card};
+  --el-bg-color:               #{$bg-card};
+  --el-bg-color-page:          #{$bg-page};
+  --el-bg-color-overlay:       #{$bg-card};
+
+  --el-box-shadow:             #{$shadow-card};
+  --el-box-shadow-light:       #{$shadow-card};
+  --el-box-shadow-lighter:     0 1px 4px rgba(15,23,42,.06);
+  --el-box-shadow-dark:        #{$shadow-dialog};
+}
+
+// ─── Page Container ───────────────────────────────────────────────────────────
+.page-container { padding: 0; }
+
+// ─── Card ─────────────────────────────────────────────────────────────────────
+.el-card {
+  border-radius: $radius-lg !important;
+  border: 1px solid $border-base !important;
+  box-shadow: $shadow-card !important;
+  transition: box-shadow 0.2s ease;
+
+  &:hover { box-shadow: $shadow-card-hover !important; }
+
+  .el-card__header {
+    padding: 14px 20px;
+    border-bottom: 1px solid $border-base;
+    background: #FAFBFE;
+    border-radius: $radius-lg $radius-lg 0 0;
+    font-weight: 600;
+    font-size: 14px;
+    color: $text-primary;
+  }
+
+  .el-card__body { padding: 20px; }
+}
+
+// ─── Card Header Layout ───────────────────────────────────────────────────────
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+// ─── Table ────────────────────────────────────────────────────────────────────
+.el-table {
+  border-radius: $radius-md;
+  overflow: hidden;
+  font-size: 13px;
+
+  &.el-table--border {
+    border: 1px solid $border-base !important;
+    border-radius: $radius-md;
+  }
+
+  th.el-table__cell {
+    background: $bg-table-header !important;
+    color: $text-secondary !important;
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    padding: 10px 16px;
+    border-bottom: 1px solid $border-base !important;
+  }
+
+  td.el-table__cell {
+    padding: 11px 16px;
+    color: $text-regular;
+    border-bottom: 1px solid $border-light !important;
+  }
+
+  .el-table__row {
+    transition: background 0.15s ease;
+    &:hover td.el-table__cell { background: #F5F7FF !important; }
+  }
+}
+
+// ─── Button ───────────────────────────────────────────────────────────────────
+.el-button {
+  border-radius: $radius-md !important;
+  font-weight: 500;
+  transition: $transition-fast;
+  letter-spacing: 0.01em;
+
+  &.el-button--primary {
+    background: $color-primary;
+    border-color: $color-primary;
+    &:hover {
+      background: $color-primary-dark;
+      border-color: $color-primary-dark;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(79,110,247,.35);
+    }
+    &:active { transform: translateY(0); }
+  }
+
+  &.el-button--default {
+    border-color: $border-base;
+    color: $text-regular;
+    &:hover { border-color: $color-primary; color: $color-primary; background: $color-primary-light; }
+  }
+
+  &.el-button--danger {
+    &:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(239,68,68,.30); }
+  }
+}
+
+// ─── Input ────────────────────────────────────────────────────────────────────
+.el-input__wrapper {
+  border-radius: $radius-md !important;
+  box-shadow: 0 0 0 1px $border-input inset !important;
+  transition: $transition-fast;
+
+  &:hover { box-shadow: 0 0 0 1px #b0b8d0 inset !important; }
+  &.is-focus { box-shadow: 0 0 0 2px rgba(79,110,247,.20) inset, 0 0 0 1px $color-primary inset !important; }
+}
+
+.el-input__inner { color: $text-primary; font-size: 13px; }
+
+.el-textarea__inner {
+  border-radius: $radius-md !important;
+  border-color: $border-input !important;
+  font-size: 13px;
+  &:focus { border-color: $color-primary !important; box-shadow: 0 0 0 2px rgba(79,110,247,.15) !important; }
+}
+
+.el-select .el-input__wrapper { border-radius: $radius-md !important; }
+
+// ─── Tag ──────────────────────────────────────────────────────────────────────
+.el-tag {
+  border-radius: 6px !important;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 0 8px;
+  height: 22px;
+  line-height: 22px;
+  border: none !important;
+
+  &.el-tag--success { background: #ECFDF5; color: #059669; }
+  &.el-tag--danger  { background: #FEF2F2; color: #DC2626; }
+  &.el-tag--warning { background: #FFFBEB; color: #D97706; }
+  &.el-tag--info    { background: #F3F4F6; color: #6B7280; }
+  &.el-tag--primary { background: $color-primary-light; color: $color-primary; }
+}
+
+// ─── Form ─────────────────────────────────────────────────────────────────────
+.el-form-item__label { color: $text-secondary; font-size: 13px; font-weight: 500; }
+.el-form--inline .el-form-item { margin-bottom: 0; margin-right: 12px; }
+
+// ─── Pagination ───────────────────────────────────────────────────────────────
+.el-pagination {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+  font-size: 13px;
+
+  .el-pager li {
+    border-radius: $radius-sm !important;
+    font-size: 13px;
+    &.is-active { background: $color-primary !important; color: #fff !important; }
+    &:hover:not(.is-active) { color: $color-primary; }
+  }
+
+  button { border-radius: $radius-sm !important; }
+}
+
+// ─── Dialog ───────────────────────────────────────────────────────────────────
+.el-dialog {
+  border-radius: $radius-lg !important;
+  box-shadow: $shadow-dialog !important;
+  overflow: hidden;
+
+  .el-dialog__header {
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid $border-base;
+    margin-right: 0;
+
+    .el-dialog__title { font-size: 16px; font-weight: 600; color: $text-primary; }
+  }
+
+  .el-dialog__body { padding: 24px; }
+
+  .el-dialog__footer {
+    padding: 16px 24px;
+    border-top: 1px solid $border-base;
+    background: #FAFBFE;
+  }
+}
+
+// ─── Switch ───────────────────────────────────────────────────────────────────
+.el-switch.is-checked .el-switch__core { background: $color-primary; border-color: $color-primary; }
+
+// ─── Menu (API page controller sidebar) ──────────────────────────────────────
+.el-menu:not(.el-menu--horizontal) {
+  border-right: none;
+
+  .el-menu-item {
+    border-radius: $radius-sm;
+    margin: 2px 8px;
+    height: 38px;
+    line-height: 38px;
+    font-size: 13px;
+    color: $text-regular;
+    transition: $transition-fast;
+
+    &:hover { background: $color-primary-light; color: $color-primary; }
+    &.is-active { background: $color-primary-light; color: $color-primary; font-weight: 600; }
+  }
+}
+
+// ─── Tree ─────────────────────────────────────────────────────────────────────
+.el-tree {
+  .el-tree-node__content {
+    height: 36px;
+    border-radius: $radius-sm;
+    transition: $transition-fast;
+    &:hover { background: $color-primary-light; }
+  }
+  .el-tree-node.is-current > .el-tree-node__content {
+    background: $color-primary-light;
+    color: $color-primary;
+    font-weight: 600;
+  }
+}
+
+// ─── Breadcrumb ───────────────────────────────────────────────────────────────
+.el-breadcrumb__item .el-breadcrumb__inner {
+  font-size: 13px;
+  color: $text-secondary;
+  &.is-link:hover { color: $color-primary; }
+}
+.el-breadcrumb__item:last-child .el-breadcrumb__inner { color: $text-primary; font-weight: 500; }
+
+// ─── Dropdown ─────────────────────────────────────────────────────────────────
+.el-dropdown-menu {
+  border-radius: $radius-md !important;
+  box-shadow: $shadow-card-hover !important;
+  border: 1px solid $border-base !important;
+  padding: 4px;
+}
+.el-dropdown-menu__item {
+  font-size: 13px;
+  border-radius: $radius-sm;
+  margin: 2px 0;
+  &:hover { background: $color-primary-light; color: $color-primary; }
+}
+
+// ─── Message Box ──────────────────────────────────────────────────────────────
+.el-overlay { z-index: 2000 !important; }
+.el-message-box { border-radius: $radius-lg !important; box-shadow: $shadow-dialog !important; }
+
+// ─── Scrollbar ────────────────────────────────────────────────────────────────
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #D1D5E0; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #B0B8D0; }

@@ -1,0 +1,45 @@
+﻿server:
+  port: ${servicePort}
+  servlet:
+    context-path: /${serviceName}
+
+spring:
+  application:
+    name: ${serviceName}
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+        username: nacos
+        password: nacos
+      config:
+        server-addr: 127.0.0.1:8848
+        username: nacos
+        password: nacos
+        file-extension: yml
+#if($useDatabase != "y" || $useRedis != "y")
+  autoconfigure:
+    exclude:
+#if($useDatabase != "y")
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+      - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
+      - com.baomidou.mybatisplus.autoconfigure.MybatisPlusAutoConfiguration
+#end
+#if($useRedis != "y")
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisReactiveAutoConfiguration
+#end
+#end
+  config:
+    import:
+      - nacos:duke-common.yml?refreshEnabled=true
+      - nacos:${serviceName}.yml?refreshEnabled=true
+
+swagger:
+  title: ${serviceDesc} API
+  description: ${serviceDesc}鎺ュ彛鏂囨。
+  version: 1.0.0
+  enable-security: #if($useSecurity == "y")true#{else}false#end
+
+
+

@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<archetype-descriptor
+    xmlns="https://maven.apache.org/plugins/maven-archetype-plugin/archetype-descriptor/1.1.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="https://maven.apache.org/plugins/maven-archetype-plugin/archetype-descriptor/1.1.0
+    https://maven.apache.org/xsd/archetype-descriptor-1.1.0.xsd"
+    name="duke-service-archetype">
+
+    <requiredProperties>
+        <!-- 服务名称（英文小写），例如 duke-order -->
+        <requiredProperty key="serviceName">
+            <defaultValue>duke-new-service</defaultValue>
+        </requiredProperty>
+        <!-- 服务端口号 -->
+        <requiredProperty key="servicePort">
+            <defaultValue>8090</defaultValue>
+        </requiredProperty>
+        <!-- Java 类名前缀（大写驼峰），例如 Order -->
+        <requiredProperty key="classPrefix">
+            <defaultValue>Demo</defaultValue>
+        </requiredProperty>
+        <!-- 类名前缀小写（用于包名、RequestMapping、@ConfigurationProperties），例如 order -->
+        <requiredProperty key="classPrefixLower">
+            <defaultValue>demo</defaultValue>
+        </requiredProperty>
+        <!-- 服务中文描述 -->
+        <requiredProperty key="serviceDesc">
+            <defaultValue>新微服务</defaultValue>
+        </requiredProperty>
+        <!-- 是否使用数据库（MyBatis-Plus + MySQL）：y 或 n -->
+        <requiredProperty key="useDatabase">
+            <defaultValue>n</defaultValue>
+        </requiredProperty>
+        <!-- 是否使用 Redis 缓存：y 或 n -->
+        <requiredProperty key="useRedis">
+            <defaultValue>n</defaultValue>
+        </requiredProperty>
+        <!-- 是否使用 OpenFeign 跨服务调用：y 或 n -->
+        <requiredProperty key="useFeign">
+            <defaultValue>n</defaultValue>
+        </requiredProperty>
+        <!-- 是否使用 Spring Security：y 或 n -->
+        <requiredProperty key="useSecurity">
+            <defaultValue>n</defaultValue>
+        </requiredProperty>
+    </requiredProperties>
+
+    <fileSets>
+        <!-- 根目录文档 -->
+        <fileSet filtered="true" encoding="UTF-8">
+            <directory></directory>
+            <includes>
+                <include>SCAFFOLD-NOTICE.md</include>
+            </includes>
+        </fileSet>
+
+        <!-- 主 Java 源码文件（Velocity 替换） -->
+        <fileSet filtered="true" packaged="true" encoding="UTF-8">
+            <directory>src/main/java</directory>
+            <includes>
+                <include>**/*.java</include>
+            </includes>
+        </fileSet>
+
+        <!-- 资源文件（application.yml、Mapper.xml 等，Velocity 替换） -->
+        <fileSet filtered="true" encoding="UTF-8">
+            <directory>src/main/resources</directory>
+            <includes>
+                <include>**/*.yml</include>
+                <include>**/*.xml</include>
+            </includes>
+        </fileSet>
+
+        <!-- 测试源码 -->
+        <fileSet filtered="true" packaged="true" encoding="UTF-8">
+            <directory>src/test/java</directory>
+            <includes>
+                <include>**/*.java</include>
+            </includes>
+        </fileSet>
+    </fileSets>
+</archetype-descriptor>

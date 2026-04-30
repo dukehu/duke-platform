@@ -1,0 +1,30 @@
+server:
+  port: 8083
+  servlet:
+    context-path: /knowledge-qa
+
+spring:
+  application:
+    name: duke-knowledge-qa
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+        username: nacos
+        password: nacos
+      config:
+        server-addr: 127.0.0.1:8848
+        username: nacos
+        password: nacos
+        file-extension: yml
+
+  config:
+    import:
+      - nacos:duke-common.yml?refreshEnabled=true
+      - nacos:duke-knowledge-qa.yml?refreshEnabled=true
+
+swagger:
+  title: 知识库问答 API
+  description: 企业级私有知识库问答系统接口文档
+  version: 1.0.0
+  enable-security: true

@@ -1,0 +1,34 @@
+server:
+  port: 8082
+  servlet:
+    context-path: /transformer
+
+spring:
+  application:
+    name: duke-transformer
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+        username: nacos
+        password: nacos
+      config:
+        server-addr: 127.0.0.1:8848
+        username: nacos
+        password: nacos
+        file-extension: yml
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+      - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
+      - com.baomidou.mybatisplus.autoconfigure.MybatisPlusAutoConfiguration
+  config:
+    import:
+      - nacos:duke-common.yml?refreshEnabled=true
+      - nacos:duke-transformer.yml?refreshEnabled=true
+
+swagger:
+  title: Transformer 模型可视化 API
+  description: Transformer 模型可视化和教学演示系统接口文档
+  version: 1.0.0
+  enable-security: false

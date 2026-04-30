@@ -1,0 +1,28 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: duke-gateway
+  main:
+    web-application-type: reactive
+  # 禁用不需要的自动配置（Gateway 不需要数据库）
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+      - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+        username: nacos
+        password: nacos
+      config:
+        server-addr: 127.0.0.1:8848
+        username: nacos
+        password: nacos
+        file-extension: yml
+  config:
+    import:
+      - nacos:duke-common.yml?refreshEnabled=true
+      - nacos:duke-gateway.yml?refreshEnabled=true

@@ -1,0 +1,38 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(java:*)",
+      "Bash(javac:*)",
+      "Bash(mvn:*)",
+      "Bash(mvnw:*)",
+      "Bash(git:*)",
+      "Bash(curl:*)",
+      "Bash(ps:*)",
+      "Bash(jps:*)",
+      "Bash(tail:*)",
+      "Bash(grep:*)",
+      "Bash(find:*)",
+      "Bash(xargs:*)",
+      "Bash(cat:*)",
+      "Bash(ls:*)",
+      "Bash(node:*)",
+      "Bash(npm:*)",
+      "Bash(npx:*)",
+      "Bash(yarn:*)",
+      "Bash(pnpm:*)",
+      "Bash(vite:*)",
+      "Bash(vue:*)",
+      "Read(**/*)",
+      "Edit(**/*)",
+      "Write(**/*)",
+      "Create(**/*)",
+      "Rename(**/*)",
+      "List(**/*)",
+      "Search(**/*)",
+      "Bash(rm *)",
+      "Bash(mv *)",
+      "Bash(mv \"src/main/resources/mapper/\\\\${classPrefix}Mapper.xml\" \"src/main/resources/mapper/__classPrefix__Mapper.xml\")",
+      "Bash(mv \"src/test/java/\\\\${classPrefix}ApplicationTests.java\" \"src/test/java/__classPrefix__ApplicationTests.java\")"
+    ]
+  }
+}

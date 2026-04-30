@@ -1,0 +1,412 @@
+# CLAUDE.md
+
+此文件为 Claude Code (claude.ai/code) 在此项目中工作提供指导。
+
+## 项目概述
+
+**Duke 平台** 是一个基于微服务的单体仓库，包含认证、API 网关和 Transformer 模型可视化服务以及对应的 Web 前端。
+
+### 项目结构
+
+```
+duke-platform/
+├── backend/                    # 后端服务目录
+│   ├── duke-parent/           # Maven 父 POM，统一版本管理
+│   ├── duke-framework/        # 共享框架库（所有服务依赖）
+│   ├── duke-auth/             # 认证服务
+│   ├── duke-gateway/          # API 网关
+│   ├── duke-transformer/      # Transformer 模型可视化服务
+│   └── duke-knowledge-qa/     # 知识问答服务（空目录，待实现）
+└── frontend/                   # 前端服务目录
+    ├── duke-auth-web/         # 认证前端
+    ├── duke-transformer-web/  # Transformer 前端
+    └── duke-knowledge-qa-web/ # 知识问答前端（空目录，待实现）
+```
+
+### 架构
+
+- **后端服务**（Java/Spring Boot）：位于 `/backend` 目录
+  - `duke-parent`：Maven 父 POM，统一依赖和插件版本
+  - `duke-framework`：共享框架库，包含通用工具、异常、配置等
+  - `duke-auth`：用户认证和授权，支持 JWT、OAuth（微信/GitHub）、短信登录
+  - `duke-gateway`：API 网关，使用 Spring Cloud Gateway 和 Nacos 服务发现
+  - `duke-transformer`：Transformer 模型可视化和教学演示系统（Nacos 注册名：`duke-transformer`）
+  - `duke-knowledge-qa`：知识问答服务（待实现）
+
+- **前端服务**（Vue 3/TypeScript）：位于 `/frontend` 目录
+  - `duke-auth-web`：认证和授权界面
+  - `duke-transformer-web`：Transformer 可视化和学习界面，支持 SSE 流式传输
+  - `duke-knowledge-qa-web`：知识问答界面（待实现）
+
+### 核心技术栈
+
+- **后端技术栈**：
+  - Java 21
+  - Spring Boot 3.2.5
+  - Spring Cloud（2023.0.1）
+  - Spring Cloud Alibaba（Nacos）
+  - MyBatis-Plus
+  - MySQL
+  - Redis
+  - OpenAPI/Swagger
+- **前端技术栈**：
+  - Vue 3.5
+  - TypeScript
+  - Vite
+  - Element Plus
+  - Pinia（状态管理）
+  - Axios
+- **基础设施**：
+  - Nacos（服务发现/配置）
+  - MySQL
+  - Redis
+
+### 关键基础设施服务
+
+- **Nacos**（127.0.0.1:8848）：服务发现和配置管理
+- **MySQL**：用户数据、认证记录
+- **Redis**：Token 黑名单（JWT 撤销）、会话存储
+
+## 后端服务（Java/Maven）开发指南
+
+### 常用 Maven 命令
+
+在任何 `/duke-{service}` 目录下执行：
+
+```bash
+# 构建
+mvn clean install
+
+# 本地运行服务
+mvn spring-boot:run
+
+# 运行测试
+mvn test
+
+# 运行单个测试类
+mvn test -Dtest=AuthServiceTest
+
+# 运行特定测试方法
+mvn test -Dtest=AuthServiceTest#testLoginSuccess
+
+# 仅编译（不运行测试）
+mvn clean compile
+
+# 构建 JAR 包
+mvn package
+```
+
+### 运行服务
+
+服务启动时自动向 Nacos 注册并从 Nacos Config 加载配置。配置优先级：
+
+1. 环境变量（开发时使用 `.env` 文件）
+2. Nacos Config（在线配置，支持热更新）
+3. 本地 `application.yml` 中的属性
+4. 代码中的默认值
+
+**本地 application.yml 最小化配置：**
+```yaml
+server:
+  port: 8081
+  servlet:
+    context-path: /auth
+
+spring:
+  application:
+    name: duke-auth
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+        username: nacos
+        password: nacos
+      config:
+        server-addr: 127.0.0.1:8848
+        username: nacos
+        password: nacos
+        file-extension: yml
+  config:
+    import:
+      - nacos:duke-common.yml?refreshEnabled=true
+      - nacos:duke-auth.yml?refreshEnabled=true
+```
+
+**Nacos 中的配置文件：**
+- `duke-common.yml`：所有服务共享配置（Redis、JWT、内部通信密钥）
+- `duke-auth.yml`：认证服务特定配置（数据库、OAuth）
+- `duke-gateway.yml`：网关特定配置（路由、Swagger 聚合）
+- `duke-transformer.yml`：Transformer 服务配置
+- `duke-knowledge-qa.yml`：知识问答服务配置
+
+**环境变量**（复制 `.env.example` 为 `.env` 并填入实际值）：
+```bash
+# OAuth 和第三方 API（如果需要）
+WEIXIN_APP_ID, WEIXIN_APP_SECRET          # 微信 OAuth
+GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET    # GitHub OAuth
+```
+
+### 服务端口映射
+
+- `duke-gateway`：8080（API 网关）
+- `duke-auth`：8081（上下文路径：`/auth`，Nacos 注册名：`duke-auth`）
+- `duke-transformer`：8082（上下文路径：`/transformer`，Nacos 注册名：`duke-transformer`）
+- `duke-knowledge-qa`：8083（上下文路径：`/knowledge-qa`，Nacos 注册名：`duke-knowledge-qa`）
+
+### 测试服务
+
+**检查 Nacos 是否运行：**
+```bash
+curl http://127.0.0.1:8848/nacos/v1/ns/service/list
+```
+
+**检查服务注册：**
+```bash
+curl http://127.0.0.1:8848/nacos/v1/ns/instance/list?serviceName=duke-auth
+curl http://127.0.0.1:8848/nacos/v1/ns/instance/list?serviceName=duke-transformer
+```
+
+**测试 Swagger/OpenAPI 文档**（服务运行后）：
+- `http://localhost:8081/auth/swagger-ui.html`
+- `http://localhost:8082/transformer/swagger-ui.html`
+
+## 前端服务（Vue 3/Vite）开发指南
+
+### 前端应用概览
+
+- `duke-auth-web`（应用名：`duke-auth-web`）：认证界面
+- `duke-transformer-web`（应用名：`duke-transformer-web`）：Transformer 可视化界面
+
+### 常用 npm 命令
+
+在任何 `/frontend/duke-{service}-web` 目录下执行：
+
+```bash
+# 安装依赖
+npm install
+
+# 开发服务器（Vite）
+npm run dev
+
+# 构建生产版本
+npm run build
+
+# 本地预览生产构建
+npm run preview
+
+# 类型检查（通过 vue-tsc）
+npm run build  # 包含类型检查
+```
+
+### Vite 开发服务器
+
+默认运行在 `http://localhost:5173`。特性：
+- 热模块替换（HMR）实现即时更新
+- TypeScript 支持（通过 `vue-tsc`）
+- 自动导入（通过 unplugin-auto-import 和 unplugin-vue-components）
+
+### 前端目录结构
+
+每个前端项目遵循以下布局：
+```
+src/
+├── api/              # API 客户端函数（axios）
+├── components/       # 可复用的 Vue 组件
+├── layout/          # 布局包装器
+├── router/          # Vue Router 配置
+├── stores/          # Pinia 状态管理定义
+├── styles/          # 全局 SCSS/CSS 样式
+├── types/           # TypeScript 类型定义
+├── utils/           # 辅助函数
+└── views/           # 全页面组件
+```
+
+### 开发工作流
+
+1. **启动后端服务**（在 `backend/duke-{service}` 中执行 `mvn spring-boot:run`）
+   - 认证服务：`cd backend/duke-auth && mvn spring-boot:run`
+   - Transformer 服务：`cd backend/duke-transformer && mvn spring-boot:run`
+2. **启动前端开发服务器**（在 `frontend/duke-{service}-web` 中执行 `npm run dev`）
+   - 认证前端：`cd frontend/duke-auth-web && npm run dev`
+   - Transformer 前端：`cd frontend/duke-transformer-web && npm run dev`
+3. **确认 API 配置**：前端通过网关调用后端（API 基础 URL：`http://localhost:8080`）
+4. **确保 Nacos 运行**：服务依赖 Nacos 进行服务发现（`http://127.0.0.1:8848`）
+
+## 关键模式和约定
+
+### 后端（Java）
+
+**共享框架库 (`duke-framework`)**：
+
+`duke-framework` 包含所有服务共享的功能：
+- 全局异常处理和自定义异常类
+- 统一的 API 响应包装（Success/Error）
+- 工具类和常用方法
+- Spring Boot 自动配置（自动装配到其他服务）
+- 拦截器和过滤器配置
+
+**项目结构**（每个服务）：
+```
+src/main/java/com/duke/{service}/
+├── aspect/          # 自定义 AOP 方面和注解
+├── common/          # 共享工具和常量
+├── config/          # Spring 配置类
+├── controller/      # REST 控制器
+├── dto/             # 数据传输对象
+├── entity/          # JPA/MyBatis 实体
+├── enums/           # Java 枚举
+├── event/           # 事件监听器
+├── exception/       # 自定义异常
+├── mapper/          # MyBatis 映射器
+├── service/         # 业务逻辑接口
+├── service/impl/    # 业务逻辑实现
+└── util/            # 工具类
+```
+
+**Spring Security 和 JWT**：
+- 在 `duke-auth` 中实现，使用自定义安全过滤器
+- JWT token 在网关和服务级别验证
+- Token 黑名单存储在 Redis 中（TTL = 过期时间）
+- Claims 包含用户 ID、用户名、角色
+
+**MyBatis-Plus 配置**：
+- 启用逻辑删除（deleted 字段 = 1 表示已删除）
+- Mapper XML 文件位于 `src/main/resources/mapper/*.xml`
+- 全局 ID 策略：AUTO（自增长）
+
+**API 文档**：
+- 所有服务上配置 SpringDoc OpenAPI（Swagger 3）
+- 注解：`@Operation`、`@Parameter`、`@Schema` 用于端点文档
+
+### 前端（Vue 3）
+
+**状态管理（Pinia）**：
+- Store 定义在 `src/stores/` 中，包含反应式状态和操作
+- 使用 `import { useStore } from '@/stores/store-name'`
+
+**路由（Vue Router）**：
+- 路由定义在 `src/router/` 中
+- 导航守卫用于认证检查
+
+**API 集成（Axios）**：
+- API 函数在 `src/api/` 中，返回 Promise
+- 拦截器用于 token 附加、错误处理
+- 基础 URL 从环境配置读取
+
+**UI 组件**：
+- 使用 Element Plus 作为标准 UI 元素
+- 通过 unplugin-vue-components 自动导入（无需显式导入）
+
+### 特殊功能：Transformer 演示（SSE 流式传输）
+
+`duke-transformer` 提供实时 Transformer 模型可视化系统：
+
+- **服务名称说明**：
+  - 后端目录：`backend/duke-transformer`
+  - Nacos 注册名：`duke-transformer`
+  - 前端应用名：`duke-transformer-web`（存储库目录：`frontend/duke-transformer-web`）
+
+- **Encoder API**（`GET /run-encoder`）：服务器发送事件（SSE）流，包含计算步骤
+- **Decoder API**（`GET /run-autoregressive`）：SSE 流，展示 token 生成过程
+- 前端（`duke-transformer-web`）实时可视化矩阵和文本流
+- 完整端点规范见 `frontend/duke-transformer-web/` 中的 `API_REFERENCE.md`
+
+## 当前实现状态
+
+### 已实现的服务
+
+- ✅ **duke-auth**：完整的认证服务，支持多种登录方式，内部接口 `/internal/users/{userId}`
+- ✅ **duke-gateway**：API 网关，路由转发、JWT 认证、权限检查、Swagger 聚合
+- ✅ **duke-transformer**：Transformer 模型可视化系统
+- ✅ **duke-knowledge-qa**：知识问答服务骨架（已接入网关、Nacos、OpenFeign）
+- ✅ **duke-auth-web**：认证前端界面
+- ✅ **duke-transformer-web**：Transformer 前端界面
+
+### 架构增强（2026.4.30）
+
+- ✅ **Nacos Config**：所有服务配置中心化，支持热更新
+- ✅ **OpenFeign**：内部服务间通信规范化
+- ✅ **网关路由**：duke-knowledge-qa 已集成网关、Swagger 聚合
+- ✅ **内部通信**：基于 `X-Gateway-Secret` 的安全内部接口
+
+### 待完全实现的服务
+
+- ⏳ **duke-knowledge-qa**：业务逻辑开发中
+- ⏳ **duke-knowledge-qa-web**：知识问答前端（待实现）
+
+## 开发检查清单
+
+开始功能开发或修复前：
+
+1. **基础设施**：
+   - 确保 Nacos 运行在 `127.0.0.1:8848`
+   - 确保 MySQL 和 Redis 可访问
+   - 复制各服务的 `.env.example` 为 `.env`（可选，用于环保 OAuth 等第三方密钥）
+
+2. **Nacos 配置**：
+   - 在 Nacos 中创建 5 个配置文件（详见 DEVELOPER_GUIDE.md）：
+     - `duke-common.yml` - 共享配置
+     - `duke-auth.yml` - 认证服务配置
+     - `duke-gateway.yml` - 网关配置和路由
+     - `duke-transformer.yml` - Transformer 服务配置
+     - `duke-knowledge-qa.yml` - 知识问答服务配置
+
+3. **后端依赖**：`cd backend && mvn clean install`
+4. **前端依赖**：各前端目录下执行 `npm install`
+5. **构建和测试**：按照上述 Maven/npm 命令进行
+6. **类型安全**：提交前运行 `npm run build` 捕捉 TypeScript 错误
+7. **API 集成**：在前端使用前通过 Swagger UI 或 curl 测试端点
+   - 统一网关：`http://localhost:8080/swagger-ui.html`
+   - 独立服务：`http://localhost:8081/auth/swagger-ui.html`、`http://localhost:8082/transformer/swagger-ui.html`
+8. **跨服务**：前端所有请求都通过网关路由（端口 8080），不直接调用服务端口
+9. **服务间通信**：使用 OpenFeign + 内部密钥，不走网关、不传 JWT
+
+## 多服务交互
+
+### 前端 → 后端（通过网关）
+
+所有前端请求都通过 API 网关（端口 8080）转发：
+
+- `duke-auth-web` 调用 `/api/auth/**` → 网关转发到 `lb://duke-auth` → `duke-auth` 服务
+- `duke-transformer-web` 调用 `/api/transformer/**` → 网关转发到 `lb://duke-transformer` → `duke-transformer` 服务
+
+### 服务 → 服务（OpenFeign + 内部密钥）
+
+内部服务间通信**不走网关、不传 JWT token**，使用 OpenFeign + 内部密钥机制：
+
+- **OpenFeign 客户端**：在需要调用其他服务的服务中定义 `@FeignClient` 接口
+- **内部密钥认证**：所有内部请求自动携带 `X-Gateway-Secret` 请求头
+- **内部端点**：被调用服务在 `/internal/**` 路径下提供内部接口，Spring Security 白名单放行
+- 例：`duke-knowledge-qa` 通过 `AuthFeignClient` 调用 `duke-auth` 的 `/internal/users/{userId}`
+
+配置方式：
+```java
+// AuthFeignClient.java
+@FeignClient(
+    name = "duke-auth",
+    contextId = "authFeignClient",
+    configuration = InternalFeignConfig.class  // 自动注入内部密钥
+)
+public interface AuthFeignClient {
+    @GetMapping("/internal/users/{userId}")
+    Result<Object> getUserById(@PathVariable Long userId);
+}
+```
+
+### 认证流程
+
+1. 用户在 `duke-auth-web` 登录，调用 `/api/auth/login`
+2. 网关转发到 `duke-auth` 服务（`/rbac/login`）
+3. 认证服务返回 JWT token
+4. 前端保存 token，后续请求在 `Authorization: Bearer {token}` 请求头中包含 token
+5. 网关验证 token 签名和过期时间
+6. 网关验证通过后转发请求到对应服务
+7. 服务验证 token claims 获取用户权限信息
+
+---
+
+**最后更新**：2026 年 4 月 30 日
+
+**版本说明**：
+- 2026.4.29：初始版本，基于项目实际结构
+- 2026.4.30：新增 Nacos Config（配置中心）、OpenFeign（服务间通信）、duke-knowledge-qa 网关集成

@@ -1,0 +1,27 @@
+# Maven build artifacts
+target/
+*.class
+*.jar
+*.war
+
+# Node
+node_modules/
+dist/
+.vite/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Local env overrides (keep .env, ignore .env.local)
+.env.local
+.env.*.local

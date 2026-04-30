@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.duke</groupId>
+        <artifactId>duke-parent</artifactId>
+        <version>1.0.0</version>
+        <relativePath>../duke-parent/pom.xml</relativePath>
+    </parent>
+
+    <artifactId>duke-notification</artifactId>
+    <name>duke-notification</name>
+    <description>通知服务</description>
+
+    <dependencies>
+        <!-- 鍏叡妗嗘灦锛堣嚜鍔ㄨ閰?SwaggerConfig銆丟lobalExceptionHandler锛?-->
+        <dependency>
+            <groupId>com.duke</groupId>
+            <artifactId>duke-framework</artifactId>
+        </dependency>
+
+        <!-- SpringDoc OpenAPI (Swagger 3) -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+        </dependency>
+
+        <!-- OpenFeign 鏈嶅姟闂磋皟鐢?-->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-openfeign</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>
+
+

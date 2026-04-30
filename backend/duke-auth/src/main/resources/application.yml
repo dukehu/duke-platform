@@ -1,0 +1,31 @@
+server:
+  port: 8081
+  servlet:
+    context-path: /auth
+
+spring:
+  application:
+    name: duke-auth
+
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+        username: nacos
+        password: nacos
+      config:
+        server-addr: 127.0.0.1:8848
+        username: nacos
+        password: nacos
+        file-extension: yml
+
+  config:
+    import:
+      - nacos:duke-common.yml?refreshEnabled=true
+      - nacos:duke-auth.yml?refreshEnabled=true
+
+swagger:
+  title: RBAC 权限管理系统 API
+  description: 企业级 RBAC 权限管理系统接口文档
+  version: 1.0.0
+  enable-security: true
