@@ -156,38 +156,42 @@ function getScoreColor(score: number): string {
 .search-page {
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  padding: 20px;
+  gap: 12px;
+  padding: 8px 12px;
+  height: calc(100vh - 180px);
+  min-height: 0;
 }
 
 // 搜索区域
 .search-section {
+  flex-shrink: 0;
+
   .search-box {
     background: linear-gradient(135deg, #F0F2F7 0%, #FFFFFF 100%);
     border: 1px solid #D5D7EB;
     border-radius: 12px;
-    padding: 24px;
+    padding: 12px;
     box-shadow: 0 2px 8px rgba(79, 110, 247, 0.08);
 
     .search-input {
-      margin-bottom: 16px;
+      margin-bottom: 12px;
 
       :deep(.el-input__wrapper) {
         background: white;
-        border-radius: 8px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        border-radius: 6px;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
       }
 
       :deep(.el-input__inner) {
-        font-size: 16px;
+        font-size: 14px;
       }
     }
 
     .search-toolbar {
       display: flex;
       align-items: center;
-      gap: 16px;
-      margin-bottom: 12px;
+      gap: 12px;
+      margin-bottom: 8px;
       flex-wrap: wrap;
 
       .mode-group {
@@ -222,9 +226,10 @@ function getScoreColor(score: number): string {
         display: flex;
         align-items: center;
         gap: 8px;
-        height: 44px;
-        padding: 0 16px;
+        height: 36px;
+        padding: 0 12px;
         font-weight: 500;
+        font-size: 13px;
 
         .el-icon {
           color: #6B7280;
@@ -232,13 +237,13 @@ function getScoreColor(score: number): string {
       }
 
       :deep(.el-collapse-item__content) {
-        padding: 16px;
+        padding: 12px;
       }
 
       .params-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 20px;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 12px;
       }
 
       .param-item {
@@ -246,14 +251,14 @@ function getScoreColor(score: number): string {
           display: flex;
           align-items: center;
           gap: 4px;
-          margin-bottom: 8px;
+          margin-bottom: 6px;
           font-weight: 500;
-          font-size: 14px;
+          font-size: 12px;
           color: #374151;
 
           .value {
             color: #4F6EF7;
-            font-size: 13px;
+            font-size: 11px;
           }
         }
 
@@ -267,28 +272,36 @@ function getScoreColor(score: number): string {
 
 // 结果区域
 .results-section {
-  min-height: 300px;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
 }
 
 .loading-state {
   background: white;
-  border-radius: 12px;
-  padding: 40px 20px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  padding: 20px 12px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
 }
 
 .results-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+
   .results-header {
     display: flex;
     align-items: center;
-    gap: 12px;
-    margin-bottom: 16px;
-    padding: 12px 16px;
+    gap: 8px;
+    margin-bottom: 8px;
+    padding: 8px;
     background: #F9FAFB;
-    border-radius: 8px;
+    border-radius: 6px;
+    flex-shrink: 0;
 
     .result-count {
-      font-size: 14px;
+      font-size: 12px;
       color: #6B7280;
 
       strong {
@@ -302,44 +315,47 @@ function getScoreColor(score: number): string {
     display: flex;
     flex-direction: column;
     gap: 12px;
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
   }
 
   .result-card {
     background: white;
     border: 1px solid #E5E8F0;
-    border-radius: 10px;
-    padding: 16px;
+    border-radius: 6px;
+    padding: 10px;
     transition: all 0.3s ease;
     cursor: pointer;
 
     &:hover {
       border-color: #4F6EF7;
-      box-shadow: 0 4px 16px rgba(79, 110, 247, 0.12);
+      box-shadow: 0 2px 8px rgba(79, 110, 247, 0.1);
     }
 
     .result-header {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      gap: 12px;
-      margin-bottom: 12px;
+      gap: 8px;
+      margin-bottom: 6px;
 
       .result-title {
         flex: 1;
-        font-weight: 600;
-        font-size: 15px;
+        font-weight: 500;
+        font-size: 13px;
         color: #1F2937;
         margin: 0;
-        line-height: 1.5;
+        line-height: 1.4;
       }
 
       .result-score {
         flex-shrink: 0;
-        padding: 4px 10px;
-        border-radius: 6px;
+        padding: 2px 6px;
+        border-radius: 3px;
         color: white;
         font-weight: 600;
-        font-size: 12px;
+        font-size: 10px;
         white-space: nowrap;
       }
     }
@@ -347,20 +363,20 @@ function getScoreColor(score: number): string {
     .result-meta {
       display: flex;
       align-items: center;
-      gap: 8px;
-      margin-bottom: 10px;
+      gap: 6px;
+      margin-bottom: 6px;
 
       .chunk-info {
-        font-size: 12px;
+        font-size: 10px;
         color: #9CA3AF;
       }
     }
 
     .result-content {
       margin: 0;
-      font-size: 13px;
+      font-size: 12px;
       color: #6B7280;
-      line-height: 1.6;
+      line-height: 1.5;
     }
   }
 }
@@ -369,9 +385,9 @@ function getScoreColor(score: number): string {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 400px;
+  flex: 1;
   background: white;
-  border-radius: 12px;
+  border-radius: 8px;
 
   :deep(.el-empty) {
     width: 100%;
@@ -379,7 +395,7 @@ function getScoreColor(score: number): string {
 
   .empty-hint {
     color: #9CA3AF;
-    font-size: 14px;
+    font-size: 12px;
     margin: 0;
   }
 }

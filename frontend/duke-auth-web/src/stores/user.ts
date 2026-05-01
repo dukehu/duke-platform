@@ -42,8 +42,8 @@ export const useUserStore = defineStore('user', {
     async logout() {
       try {
         await logout()
-      } catch (err) {
-        console.error('Logout API error:', err)
+      } catch {
+        // 忽略logout错误（可能token已过期），直接清理本地状态
       } finally {
         this.token = ''
         this.userInfo = null

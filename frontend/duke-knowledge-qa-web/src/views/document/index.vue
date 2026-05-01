@@ -196,16 +196,19 @@ onMounted(() => {
 .document-page {
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  padding: 20px;
+  gap: 8px;
+  padding: 8px 12px;
+  height: calc(100vh - 180px);
 }
 
 .upload-section {
+  flex-shrink: 0;
+
   .upload-wrapper {
     background: linear-gradient(135deg, #F0F2F7 0%, #FFFFFF 100%);
     border: 2px dashed #D5D7EB;
     border-radius: 12px;
-    padding: 30px;
+    padding: 8px 12px;
     text-align: center;
     transition: all 0.3s ease;
 
@@ -215,58 +218,63 @@ onMounted(() => {
     }
 
     .upload-icon {
-      font-size: 48px;
+      font-size: 32px;
       color: #4F6EF7;
-      margin-bottom: 12px;
+      margin-bottom: 8px;
     }
 
     h3 {
-      margin: 12px 0 4px 0;
+      margin: 6px 0 2px 0;
       color: #1F2937;
-      font-size: 18px;
+      font-size: 15px;
     }
 
     .upload-hint {
       color: #6B7280;
-      font-size: 13px;
-      margin-bottom: 20px;
+      font-size: 12px;
+      margin-bottom: 12px;
     }
 
     :deep(.el-upload-dragger) {
       background: transparent;
       border: none;
-      padding: 0;
+      padding: 8px 0;
 
       .upload-content {
         .drag-hint {
           color: #374151;
           font-weight: 500;
-          margin-bottom: 8px;
+          font-size: 13px;
+          margin-bottom: 4px;
           em { color: #4F6EF7; font-style: normal; }
         }
 
         .file-size-hint {
           color: #9CA3AF;
-          font-size: 12px;
+          font-size: 11px;
         }
       }
     }
 
     .upload-progress {
-      margin-top: 16px;
+      margin-top: 8px;
     }
   }
 }
 
 .documents-section {
+  flex: 1;
   background: white;
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .section-header {
-  padding: 20px 20px 12px;
+  padding: 8px 12px 6px;
   border-bottom: 1px solid #E5E8F0;
 
   h3 {
@@ -279,8 +287,8 @@ onMounted(() => {
 .filter-bar {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 16px 20px;
+  gap: 8px;
+  padding: 8px 12px;
   background: #F9FAFB;
   border-bottom: 1px solid #E5E8F0;
 
@@ -304,9 +312,14 @@ onMounted(() => {
 }
 
 .table-container {
+  flex: 1;
   position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 
   :deep(.el-table) {
+    flex: 1;
     border: none;
     --el-table-border-color: #E5E8F0;
     --el-table-header-bg-color: #F9FAFB;
@@ -339,8 +352,65 @@ onMounted(() => {
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  padding: 16px 20px;
+  padding: 8px 12px;
   border-top: 1px solid #E5E8F0;
   background: #F9FAFB;
+  flex-shrink: 0;
+}
+
+@media (max-width: 1024px) {
+  .document-page {
+    height: auto;
+  }
+
+  .filter-bar {
+    flex-wrap: wrap;
+    gap: 8px;
+
+    .search-input {
+      max-width: none;
+      min-width: 150px;
+    }
+
+    .category-select {
+      width: 120px;
+    }
+
+    .search-btn,
+    .reset-btn {
+      min-width: 60px;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .document-page {
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .section-header {
+    padding: 16px 16px 8px;
+  }
+
+  .filter-bar {
+    padding: 12px 16px;
+    gap: 8px;
+
+    .search-input {
+      min-width: 100%;
+    }
+
+    .category-select,
+    .search-btn,
+    .reset-btn {
+      width: 100%;
+    }
+  }
+
+  .pagination-wrapper {
+    padding: 12px 16px;
+    justify-content: center;
+  }
 }
 </style>

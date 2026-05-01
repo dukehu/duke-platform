@@ -31,6 +31,7 @@ request.interceptors.response.use(
     return res
   },
   error => {
+    const isLogoutRequest = error.config?.url?.includes('/auth/logout')
     let errorMsg = '网络错误'
 
     if (error.response?.status === 401) {
@@ -41,9 +42,14 @@ request.interceptors.response.use(
           isRedirectingToLogin = false
         })
       }
+      if (!isLogoutRequest) {
+        errorMsg = error.response?.data?.message || 'Token已过期'
+      }
     } else {
       errorMsg = error.response?.data?.message || error.message || '网络错误'
-      ElMessage.error(errorMsg)
+      if (!isLogoutRequest) {
+        ElMessage.error(errorMsg)
+      }
     }
 
     const err = new Error(errorMsg)

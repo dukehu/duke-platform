@@ -61,6 +61,7 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)   // 无状态 JWT 不需要 CSRF 防护
+                .logout(AbstractHttpConfigurer::disable) // 禁用 form-based logout（使用 REST API 处理）
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> {
                     // 将白名单转换为 RequestMatcher 数组

@@ -1,6 +1,7 @@
 <template>
   <div class="question-page">
-    <div class="question-main">
+    <!-- 左栏：提问 -->
+    <div class="left-column">
       <!-- 提问卡片 -->
       <div class="question-card card">
         <div class="card-title">
@@ -10,7 +11,7 @@
         <el-input
           v-model="questionText"
           type="textarea"
-          :rows="8"
+          :rows="10"
           placeholder="请详细描述您的问题..."
           maxlength="1000"
           show-word-limit
@@ -50,7 +51,10 @@
           <span>提交问题</span>
         </el-button>
       </div>
+    </div>
 
+    <!-- 右栏：答案 + 参考 + 反馈 -->
+    <div class="right-column">
       <!-- 答案卡片 -->
       <div class="answer-card card">
         <div class="card-title">
@@ -68,10 +72,7 @@
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- 右侧面板 -->
-    <div class="question-sidebar">
       <!-- 参考来源 -->
       <div v-if="currentAnswer" class="sources-card card">
         <div class="card-title">
@@ -211,18 +212,25 @@ function getScoreColor(score: number): string {
 
 <style lang="scss" scoped>
 .question-page {
-  display: flex;
-  gap: 24px;
-  padding: 20px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 8px 12px;
+  height: calc(100vh - 180px);
 
-  .question-main {
-    flex: 1;
+  .left-column {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
     min-width: 0;
   }
 
-  .question-sidebar {
-    width: 360px;
-    flex-shrink: 0;
+  .right-column {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 0;
+    overflow: hidden;
   }
 }
 
@@ -232,16 +240,16 @@ function getScoreColor(score: number): string {
   border: 1px solid #E5E8F0;
   overflow: hidden;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-  margin-bottom: 24px;
-
-  &:last-child { margin-bottom: 0; }
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .card-title {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 16px 20px;
+  padding: 8px 12px;
   border-bottom: 1px solid #E5E8F0;
   background: #F9FAFB;
   font-weight: 600;
@@ -266,17 +274,20 @@ function getScoreColor(score: number): string {
 
 // 提问卡片
 .question-card {
+  flex-shrink: 0;
+
   .question-input {
-    padding: 20px;
+    padding: 8px 12px;
 
     :deep(.el-textarea__inner) {
-      padding: 12px;
-      border-radius: 8px;
+      padding: 6px;
+      border-radius: 4px;
+      min-height: 160px;
     }
   }
 
   .advanced-params {
-    margin: 12px 20px;
+    margin: 0 12px;
     border: 1px solid #E5E8F0;
     border-radius: 8px;
 
@@ -329,16 +340,21 @@ function getScoreColor(score: number): string {
   }
 
   .submit-btn {
-    width: 100%;
-    margin: 0 20px 20px;
+    width: calc(100% - 24px);
+    margin: 0 12px 8px;
   }
 }
 
 // 答案卡片
 .answer-card {
+  flex: 1;
+  min-height: 0;
+
   .answer-content {
-    padding: 20px;
-    min-height: 300px;
+    flex: 1;
+    padding: 12px;
+    overflow-y: auto;
+    min-height: 0;
 
     .markdown-content {
       :deep(h1) { font-size: 20px; margin: 16px 0 8px; }
@@ -400,15 +416,22 @@ function getScoreColor(score: number): string {
 
 // 参考来源
 .sources-card {
+  flex: 0.5;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+
   .source-list {
     padding: 0;
-    max-height: 500px;
+    flex: 1;
     overflow-y: auto;
+    min-height: 0;
   }
 
   .source-item {
-    padding: 12px;
+    padding: 6px 8px;
     border-bottom: 1px solid #E5E8F0;
+    font-size: 11px;
 
     &:last-child { border-bottom: none; }
 
@@ -453,52 +476,87 @@ function getScoreColor(score: number): string {
   }
 
   .empty-sources {
-    padding: 20px;
+    padding: 8px 12px;
     text-align: center;
     color: #9CA3AF;
-    font-size: 13px;
+    font-size: 11px;
   }
 }
 
 // 反馈卡片
 .feedback-card {
+  flex: 0.5;
+  min-height: 0;
+
   .feedback-form {
-    padding: 20px;
+    padding: 8px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+    overflow-y: auto;
 
     .rating-group {
-      margin-bottom: 16px;
+      margin-bottom: 4px;
 
       .rating-label {
         display: block;
-        margin-bottom: 8px;
+        margin-bottom: 4px;
         font-weight: 500;
-        font-size: 13px;
+        font-size: 11px;
         color: #374151;
       }
     }
 
     .feedback-input {
-      margin-bottom: 12px;
+      margin-bottom: 6px;
+      flex: 1;
 
       :deep(.el-textarea__inner) {
-        padding: 8px;
-        border-radius: 6px;
+        padding: 4px;
+        border-radius: 3px;
+        min-height: 50px;
       }
     }
 
     .feedback-btn {
       width: 100%;
+      flex-shrink: 0;
+      height: 28px;
+      font-size: 12px;
     }
   }
 }
 
 // 响应式设计
-@media (max-width: 1200px) {
+@media (max-width: 1400px) {
   .question-page {
-    flex-direction: column;
+    grid-template-columns: 1fr 1.1fr;
+  }
 
-    .question-sidebar {
-      width: 100%;
+  .question-card {
+    .question-input {
+      :deep(.el-textarea__inner) {
+        min-height: 280px;
+      }
+    }
+  }
+}
+
+@media (max-width: 1024px) {
+  .question-page {
+    grid-template-columns: 1fr;
+    gap: 16px;
+
+    .left-column {
+      gap: 16px;
+    }
+
+    .right-column {
+      gap: 16px;
+      max-height: none;
+      overflow-y: visible;
+      padding-right: 0;
     }
   }
 }
@@ -506,16 +564,37 @@ function getScoreColor(score: number): string {
 @media (max-width: 768px) {
   .question-page {
     padding: 12px;
-    gap: 16px;
+    gap: 12px;
   }
 
   .card {
-    margin-bottom: 16px;
+    margin-bottom: 0;
+  }
+
+  .left-column,
+  .right-column {
+    gap: 12px;
+  }
+
+  .question-card {
+    .submit-btn {
+      font-size: 14px;
+    }
+  }
+
+  .advanced-params {
+    :deep(.el-collapse-item__content) {
+      padding: 12px;
+    }
   }
 
   .param-group {
     flex-direction: column;
     gap: 12px;
+  }
+
+  .source-list {
+    max-height: 300px;
   }
 }
 </style>
