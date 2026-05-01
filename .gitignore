@@ -25,3 +25,7 @@ logs/
 # Local env overrides (keep .env, ignore .env.local)
 .env.local
 .env.*.local
+
+# Uploaded files
+/uploads/
+files/

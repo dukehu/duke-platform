@@ -16,6 +16,7 @@
           maxlength="1000"
           show-word-limit
           class="question-input"
+          style="height: 70vh"
         />
 
         <!-- 高级参数 -->
@@ -216,7 +217,7 @@ function getScoreColor(score: number): string {
   grid-template-columns: 1fr 1fr;
   gap: 12px;
   padding: 8px 12px;
-  height: calc(100vh - 180px);
+  height: calc(100vh - 40px);
 
   .left-column {
     display: flex;
@@ -274,7 +275,7 @@ function getScoreColor(score: number): string {
 
 // 提问卡片
 .question-card {
-  flex-shrink: 0;
+  flex: 1;
 
   .question-input {
     padding: 8px 12px;

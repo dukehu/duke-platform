@@ -3,17 +3,48 @@
     <!-- 上传区域 -->
     <div class="upload-section">
       <div class="upload-wrapper">
-        <el-icon class="upload-icon"><UploadFilled /></el-icon>
-        <h3>上传文档</h3>
+        <div class="upload-header">
+          <div class="title-section">
+            <el-icon class="upload-icon"><UploadFilled /></el-icon>
+            <h3>上传文档</h3>
+          </div>
+        </div>
+
+        <div class="upload-options">
+          <div class="option-group">
+            <label>分类</label>
+            <el-select
+              v-model="uploadCategory"
+              placeholder="选择分类"
+              size="small"
+              class="category-selector"
+            >
+              <el-option label="技术文档" value="技术文档" />
+              <el-option label="业务文档" value="业务文档" />
+              <el-option label="其他" value="其他" />
+            </el-select>
+          </div>
+
+          <div class="option-group">
+            <label>标签</label>
+            <el-input
+              v-model="uploadTags"
+              placeholder="用逗号分隔，如：AI,LLM"
+              size="small"
+              class="tags-input"
+            />
+          </div>
+        </div>
+
         <p class="upload-hint">支持 PDF、Word、TXT、Markdown 格式</p>
+
         <el-upload
           drag
           action="#"
-          :auto-upload="false"
+          :auto-upload="true"
           :http-request="handleUpload"
           accept=".pdf,.doc,.docx,.txt,.md"
           multiple
-          :on-change="handleFileChange"
         >
           <div class="upload-content">
             <div class="drag-hint">拖放文件到此，或<em>点击上传</em></div>
@@ -79,8 +110,16 @@
           </el-table-column>
           <el-table-column prop="fileType" label="类型" width="70" align="center" />
           <el-table-column prop="createTime" label="创建时间" width="160" align="center" show-overflow-tooltip />
-          <el-table-column label="操作" width="80" align="center" fixed="right">
+          <el-table-column label="操作" width="140" align="center" fixed="right">
             <template #default="{ row }">
+              <el-button
+                type="primary"
+                size="small"
+                text
+                @click="handlePreview(row)"
+              >
+                预览
+              </el-button>
               <el-button
                 type="danger"
                 size="small"
@@ -106,12 +145,52 @@
         </div>
       </div>
     </div>
+
+    <!-- 文件预览抽屉 -->
+    <el-drawer
+      v-model="previewVisible"
+      :title="previewDoc?.title"
+      direction="rtl"
+      size="50%"
+      destroy-on-close
+    >
+      <!-- PDF -->
+      <iframe
+        v-if="previewDoc?.fileType === 'pdf'"
+        :src="previewDoc.fileUrl"
+        style="width: 100%; height: calc(100vh - 60px); border: none"
+      />
+      <!-- TXT / MD -->
+      <div
+        v-else-if="['txt', 'md'].includes(previewDoc?.fileType ?? '')"
+        style="height: calc(100vh - 60px); overflow: auto; padding: 16px"
+      >
+        <div
+          v-if="previewDoc?.fileType === 'md'"
+          v-html="previewHtml"
+          class="markdown-body"
+        />
+        <pre v-else style="white-space: pre-wrap; margin: 0">{{ previewText }}</pre>
+      </div>
+      <!-- DOCX / DOC -->
+      <div
+        v-else-if="['docx', 'doc'].includes(previewDoc?.fileType ?? '')"
+        ref="docxContainer"
+        style="height: calc(100vh - 60px); overflow: auto; padding: 16px; background: #fff"
+      />
+      <!-- 未知类型兜底 -->
+      <div v-else style="padding: 40px; text-align: center; color: #999">
+        暂不支持该格式预览
+      </div>
+    </el-drawer>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { marked } from 'marked'
+import { renderAsync } from 'docx-preview'
 import { useDocumentStore } from '@/stores/documentStore'
 import type { Document, DocumentQueryDTO } from '@/types/document'
 
@@ -121,6 +200,13 @@ const documents = ref<Document[]>([])
 const total = ref(0)
 const loading = ref(false)
 const uploadProgress = ref(0)
+const uploadCategory = ref('技术文档')
+const uploadTags = ref('')
+const previewVisible = ref(false)
+const previewDoc = ref<Document | null>(null)
+const previewText = ref('')
+const previewHtml = ref('')
+const docxContainer = ref<HTMLElement | null>(null)
 const query = reactive<DocumentQueryDTO>({
   category: '',
   keyword: '',
@@ -142,12 +228,20 @@ async function loadData() {
 async function handleUpload(options: any) {
   const formData = new FormData()
   formData.append('file', options.file)
-  formData.append('category', query.category || '其他')
+  formData.append('category', uploadCategory.value || '其他')
+
+  // 将标签字符串转换为数组
+  const tags = uploadTags.value
+    .split(',')
+    .map(tag => tag.trim())
+    .filter(tag => tag.length > 0)
+  formData.append('tags', JSON.stringify(tags))
 
   loading.value = true
   try {
     await docStore.uploadDocument(formData)
     ElMessage.success('上传成功')
+    uploadTags.value = '' // 清空标签
     await loadData()
   } catch (error) {
     ElMessage.error('上传失败，请重试')
@@ -158,6 +252,48 @@ async function handleUpload(options: any) {
 
 function handleFileChange() {
   uploadProgress.value = 0
+}
+
+async function handlePreview(row: Document) {
+  previewDoc.value = row
+  previewText.value = ''
+  previewHtml.value = ''
+  previewVisible.value = true
+
+  const type = (row.fileType || '').toLowerCase()
+  console.log('预览文件类型:', type, '完整数据:', row)
+
+  if (type === 'txt') {
+    try {
+      const res = await fetch(row.fileUrl)
+      previewText.value = await res.text()
+    } catch (error) {
+      ElMessage.error('加载文本文件失败: ' + (error as any).message)
+    }
+  } else if (type === 'md') {
+    try {
+      const res = await fetch(row.fileUrl)
+      const text = await res.text()
+      previewHtml.value = await marked.parse(text)
+    } catch (error) {
+      ElMessage.error('加载 Markdown 文件失败: ' + (error as any).message)
+    }
+  } else if (type === 'docx' || type === 'doc') {
+    try {
+      await nextTick()
+      const res = await fetch(row.fileUrl)
+      const buffer = await res.arrayBuffer()
+      if (docxContainer.value) {
+        await renderAsync(buffer, docxContainer.value)
+      }
+    } catch (error) {
+      ElMessage.error('加载 Word 文件失败: ' + (error as any).message)
+    }
+  } else if (type === 'pdf') {
+    // PDF 直接用 iframe，无需处理
+  } else {
+    ElMessage.warning('暂不支持此格式预览: ' + type)
+  }
 }
 
 async function handleDelete(id: number) {
@@ -198,7 +334,7 @@ onMounted(() => {
   flex-direction: column;
   gap: 8px;
   padding: 8px 12px;
-  height: calc(100vh - 180px);
+  height: calc(100vh - 40px);
 }
 
 .upload-section {
@@ -217,16 +353,98 @@ onMounted(() => {
       background: linear-gradient(135deg, #EEF1FE 0%, #FFFFFF 100%);
     }
 
-    .upload-icon {
-      font-size: 32px;
-      color: #4F6EF7;
-      margin-bottom: 8px;
+    .upload-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 12px;
+
+      .title-section {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .upload-icon {
+        font-size: 28px;
+        color: #4F6EF7;
+      }
+
+      h3 {
+        margin: 0;
+        color: #1F2937;
+        font-size: 15px;
+      }
     }
 
-    h3 {
-      margin: 6px 0 2px 0;
-      color: #1F2937;
-      font-size: 15px;
+    .upload-options {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 12px;
+      padding: 10px 12px;
+      background: rgba(79, 110, 247, 0.05);
+      border-radius: 8px;
+
+      .option-group {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex: 1;
+        min-width: 0;
+
+        label {
+          color: #4F6EF7;
+          font-size: 13px;
+          font-weight: 600;
+          white-space: nowrap;
+          margin: 0;
+        }
+
+        :deep(.el-input__wrapper) {
+          background: white;
+          border-radius: 6px;
+          padding: 4px 10px !important;
+          border: 1px solid #E5E8F0;
+          transition: all 0.2s;
+
+          &:hover {
+            border-color: #4F6EF7;
+          }
+
+          &:focus-within {
+            border-color: #4F6EF7;
+            box-shadow: 0 0 0 2px rgba(79, 110, 247, 0.1);
+          }
+        }
+
+        :deep(.el-select__wrapper) {
+          background: white;
+          border-radius: 6px;
+          padding: 0 !important;
+          border: 1px solid #E5E8F0;
+          transition: all 0.2s;
+
+          &:hover {
+            border-color: #4F6EF7;
+          }
+
+          &:focus-within {
+            border-color: #4F6EF7;
+            box-shadow: 0 0 0 2px rgba(79, 110, 247, 0.1);
+          }
+        }
+
+        .category-selector,
+        .tags-input {
+          width: 100%;
+          min-width: 0;
+
+          :deep(.el-input__inner),
+          :deep(.el-select-v2__combobox-input) {
+            font-size: 13px;
+            height: 32px;
+          }
+        }
+      }
     }
 
     .upload-hint {
@@ -381,6 +599,31 @@ onMounted(() => {
       min-width: 60px;
     }
   }
+}
+
+.markdown-body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  line-height: 1.6;
+  color: #333;
+
+  :deep(h1) { font-size: 2em; margin: 0.67em 0; border-bottom: 1px solid #eee; padding-bottom: 0.3em; }
+  :deep(h2) { font-size: 1.5em; margin: 0.75em 0; border-bottom: 1px solid #eee; padding-bottom: 0.3em; }
+  :deep(h3) { font-size: 1.25em; margin: 0.83em 0; }
+  :deep(h4) { font-size: 1em; margin: 1em 0; }
+  :deep(h5) { font-size: 0.875em; margin: 1.17em 0; }
+  :deep(h6) { font-size: 0.75em; margin: 1.33em 0; color: #666; }
+
+  :deep(p) { margin: 0.5em 0; }
+  :deep(pre) { background: #f6f8fa; border: 1px solid #ddd; border-radius: 3px; padding: 1em; overflow: auto; }
+  :deep(code) { background: #f6f8fa; padding: 2px 4px; border-radius: 3px; font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; }
+  :deep(blockquote) { border-left: 4px solid #ddd; margin: 0; padding-left: 1em; color: #666; }
+  :deep(ul) { margin: 0.5em 0; padding-left: 2em; }
+  :deep(ol) { margin: 0.5em 0; padding-left: 2em; }
+  :deep(li) { margin: 0.25em 0; }
+  :deep(a) { color: #4F6EF7; text-decoration: none; &:hover { text-decoration: underline; } }
+  :deep(table) { border-collapse: collapse; width: 100%; margin: 0.5em 0; }
+  :deep(th), :deep(td) { border: 1px solid #ddd; padding: 0.5em; }
+  :deep(th) { background: #f6f8fa; }
 }
 
 @media (max-width: 768px) {

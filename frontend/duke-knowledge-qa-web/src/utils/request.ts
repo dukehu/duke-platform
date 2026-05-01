@@ -34,10 +34,15 @@ request.interceptors.response.use(
     return res.data
   },
   error => {
-    if (error.response?.status === 401) {
+    // 处理响应体的错误（HTTP 4xx/5xx 但有 data body）
+    if (error.response?.data) {
+      const res = error.response.data as any
+      const errorMsg = res.message || error.response.statusText || error.message || '网络错误'
+      ElMessage.error(errorMsg)
+    } else if (error.response?.status === 401) {
       window.parent.postMessage({ type: 'AUTH_EXPIRED' }, '*')
     } else {
-      const errorMsg = error.response?.data?.message || error.message || '网络错误'
+      const errorMsg = error.message || '网络错误'
       ElMessage.error(errorMsg)
     }
     return Promise.reject(error)

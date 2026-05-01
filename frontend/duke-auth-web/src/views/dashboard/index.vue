@@ -40,7 +40,7 @@ const cards = [
 </script>
 
 <style lang="scss" scoped>
-.dashboard { padding: 0; }
+.dashboard { padding: 20px; }
 
 .card-content {
   display: flex;
