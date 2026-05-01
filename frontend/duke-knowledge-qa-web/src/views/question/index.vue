@@ -1,85 +1,140 @@
 <template>
-  <div class="page-container question-layout">
-    <div class="left-panel">
-      <el-card>
-        <template #header>
-          <span style="font-weight: 600">提问</span>
-        </template>
+  <div class="question-page">
+    <div class="question-main">
+      <!-- 提问卡片 -->
+      <div class="question-card card">
+        <div class="card-title">
+          <el-icon><EditPen /></el-icon>
+          <span>提出您的问题</span>
+        </div>
         <el-input
           v-model="questionText"
           type="textarea"
           :rows="8"
-          placeholder="请输入您的问题..."
+          placeholder="请详细描述您的问题..."
           maxlength="1000"
           show-word-limit
+          class="question-input"
         />
-        <el-collapse style="margin-top: 12px">
-          <el-collapse-item title="高级参数" name="advanced">
+
+        <!-- 高级参数 -->
+        <el-collapse class="advanced-params">
+          <el-collapse-item name="advanced">
+            <template #title>
+              <el-icon><Setting /></el-icon>
+              <span>高级参数</span>
+            </template>
             <div class="param-group">
-              <div>
-                <label>Top K ({{ topK }}):</label>
+              <div class="param-item">
+                <div class="param-label">Top K <span class="param-value">({{ topK }})</span></div>
                 <el-slider v-model="topK" :min="1" :max="20" />
+                <div class="param-desc">获取相关文档的数量</div>
               </div>
-              <div style="margin-top: 12px">
-                <label>相似度阈值 ({{ scoreThreshold.toFixed(2) }}):</label>
+              <div class="param-item">
+                <div class="param-label">相似度阈值 <span class="param-value">({{ scoreThreshold.toFixed(2) }})</span></div>
                 <el-slider v-model="scoreThreshold" :min="0" :max="1" :step="0.1" />
+                <div class="param-desc">文档相似度最低要求</div>
               </div>
             </div>
           </el-collapse-item>
         </el-collapse>
-        <el-button type="primary" @click="submitQuestion" :loading="questionLoading" style="width: 100%; margin-top: 12px">
-          提交问题
-        </el-button>
-      </el-card>
 
-      <el-card style="margin-top: 20px">
-        <template #header>
-          <span style="font-weight: 600">答案</span>
-        </template>
-        <div v-if="questionLoading" style="padding: 20px; text-align: center">
-          <el-skeleton :rows="5" animated />
+        <el-button
+          type="primary"
+          @click="submitQuestion"
+          :loading="questionLoading"
+          size="large"
+          class="submit-btn"
+        >
+          <el-icon><DocumentCopy /></el-icon>
+          <span>提交问题</span>
+        </el-button>
+      </div>
+
+      <!-- 答案卡片 -->
+      <div class="answer-card card">
+        <div class="card-title">
+          <el-icon><DocumentCopy /></el-icon>
+          <span>AI 回答</span>
         </div>
-        <div v-else-if="currentAnswer" class="markdown-content" v-html="renderedAnswer" />
-        <div v-else style="text-align: center; color: #9CA3AF; padding: 20px">
-          提交问题后，答案将显示在这里
+        <div class="answer-content">
+          <div v-if="questionLoading" class="loading-state">
+            <el-skeleton :rows="6" animated />
+          </div>
+          <div v-else-if="currentAnswer" class="markdown-content" v-html="renderedAnswer" />
+          <div v-else class="empty-state">
+            <el-icon><DocumentCopy /></el-icon>
+            <p>提交问题后，AI 将在这里显示回答</p>
+          </div>
         </div>
-      </el-card>
+      </div>
     </div>
 
-    <div class="right-panel">
-      <el-card v-if="currentAnswer">
-        <template #header>
-          <span style="font-weight: 600">参考来源 ({{ currentAnswer.sourceChunks?.length || 0 }})</span>
-        </template>
+    <!-- 右侧面板 -->
+    <div class="question-sidebar">
+      <!-- 参考来源 -->
+      <div v-if="currentAnswer" class="sources-card card">
+        <div class="card-title">
+          <el-icon><Link /></el-icon>
+          <span>参考来源</span>
+          <span class="badge">{{ currentAnswer.sourceChunks?.length || 0 }}</span>
+        </div>
         <div v-if="currentAnswer.sourceChunks?.length" class="source-list">
           <div v-for="(chunk, idx) in currentAnswer.sourceChunks" :key="idx" class="source-item">
             <div class="source-title">{{ chunk.documentTitle }}</div>
-            <div class="source-content">{{ truncateText(chunk.content, 120) }}</div>
-            <el-progress :percentage="Math.round(chunk.score * 100)" :color="getScoreColor(chunk.score)" />
+            <div class="source-content">{{ truncateText(chunk.content, 100) }}</div>
+            <div class="source-score">
+              <span class="score-label">相关度</span>
+              <el-progress
+                :percentage="Math.round(chunk.score * 100)"
+                :color="getScoreColor(chunk.score)"
+                :show-text="false"
+                style="flex: 1"
+              />
+              <span class="score-value">{{ (chunk.score * 100).toFixed(0) }}%</span>
+            </div>
           </div>
         </div>
-      </el-card>
-
-      <el-card v-if="currentAnswer" style="margin-top: 20px">
-        <template #header>
-          <span style="font-weight: 600">反馈</span>
-        </template>
-        <div style="margin-bottom: 12px">
-          <label style="display: block; margin-bottom: 8px; font-weight: 500">答案评分：</label>
-          <el-rate v-model="feedbackRating" :colors="['#F59E0B', '#F59E0B', '#10B981']" />
+        <div v-else class="empty-sources">
+          <p>暂无参考来源</p>
         </div>
-        <el-input
-          v-model="feedbackText"
-          type="textarea"
-          :rows="4"
-          placeholder="请输入您的反馈意见..."
-          maxlength="500"
-          show-word-limit
-        />
-        <el-button type="primary" @click="submitFeedback" :loading="feedbackLoading" style="width: 100%; margin-top: 12px">
-          提交反馈
-        </el-button>
-      </el-card>
+      </div>
+
+      <!-- 反馈卡片 -->
+      <div v-if="currentAnswer" class="feedback-card card">
+        <div class="card-title">
+          <el-icon><Thumb /></el-icon>
+          <span>反馈</span>
+        </div>
+        <div class="feedback-form">
+          <div class="rating-group">
+            <label class="rating-label">答案评分</label>
+            <el-rate
+              v-model="feedbackRating"
+              :colors="['#F59E0B', '#F59E0B', '#10B981']"
+              size="large"
+              allow-half
+            />
+          </div>
+          <el-input
+            v-model="feedbackText"
+            type="textarea"
+            :rows="3"
+            placeholder="分享您的想法..."
+            maxlength="500"
+            show-word-limit
+            class="feedback-input"
+          />
+          <el-button
+            type="primary"
+            @click="submitFeedback"
+            :loading="feedbackLoading"
+            class="feedback-btn"
+          >
+            提交反馈
+          </el-button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -155,63 +210,312 @@ function getScoreColor(score: number): string {
 </script>
 
 <style lang="scss" scoped>
-.question-layout {
+.question-page {
   display: flex;
-  gap: 20px;
-  align-items: flex-start;
+  gap: 24px;
+  padding: 20px;
 
-  .left-panel {
+  .question-main {
     flex: 1;
     min-width: 0;
   }
 
-  .right-panel {
-    width: 380px;
+  .question-sidebar {
+    width: 360px;
     flex-shrink: 0;
   }
 }
 
-.param-group > div {
-  label {
-    display: block;
-    margin-bottom: 8px;
+.card {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #E5E8F0;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  margin-bottom: 24px;
+
+  &:last-child { margin-bottom: 0; }
+}
+
+.card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 20px;
+  border-bottom: 1px solid #E5E8F0;
+  background: #F9FAFB;
+  font-weight: 600;
+  color: #1F2937;
+  font-size: 15px;
+
+  :deep(.el-icon) {
+    color: #4F6EF7;
+    font-size: 16px;
+  }
+
+  .badge {
+    margin-left: auto;
+    background: #EEF1FE;
+    color: #4F6EF7;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
     font-weight: 500;
+  }
+}
+
+// 提问卡片
+.question-card {
+  .question-input {
+    padding: 20px;
+
+    :deep(.el-textarea__inner) {
+      padding: 12px;
+      border-radius: 8px;
+    }
+  }
+
+  .advanced-params {
+    margin: 12px 20px;
+    border: 1px solid #E5E8F0;
+    border-radius: 8px;
+
+    :deep(.el-collapse-item__header) {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      height: 44px;
+      padding: 0 16px;
+      font-weight: 500;
+      font-size: 14px;
+
+      .el-icon {
+        color: #6B7280;
+      }
+    }
+
+    :deep(.el-collapse-item__content) {
+      padding: 16px;
+    }
+  }
+
+  .param-group {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .param-item {
+    .param-label {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-bottom: 8px;
+      font-weight: 500;
+      font-size: 14px;
+      color: #374151;
+
+      .param-value {
+        color: #4F6EF7;
+        font-size: 13px;
+      }
+    }
+
+    .param-desc {
+      margin-top: 6px;
+      font-size: 12px;
+      color: #9CA3AF;
+    }
+  }
+
+  .submit-btn {
+    width: 100%;
+    margin: 0 20px 20px;
+  }
+}
+
+// 答案卡片
+.answer-card {
+  .answer-content {
+    padding: 20px;
+    min-height: 300px;
+
+    .markdown-content {
+      :deep(h1) { font-size: 20px; margin: 16px 0 8px; }
+      :deep(h2) { font-size: 18px; margin: 14px 0 8px; }
+      :deep(h3) { font-size: 16px; margin: 12px 0 8px; }
+      :deep(p) { margin: 8px 0; line-height: 1.6; color: #374151; }
+      :deep(code) {
+        background: #F3F4F6;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-family: 'Monaco', 'Courier New', monospace;
+        font-size: 13px;
+        color: #D97706;
+      }
+      :deep(pre) {
+        background: #1F2937;
+        color: #E5E7EB;
+        padding: 12px;
+        border-radius: 8px;
+        overflow-x: auto;
+        margin: 12px 0;
+      }
+      :deep(ul, ol) { margin: 8px 0 8px 20px; }
+      :deep(li) { margin: 4px 0; }
+      :deep(blockquote) {
+        border-left: 4px solid #4F6EF7;
+        margin: 8px 0;
+        padding: 8px 12px;
+        background: #EEF1FE;
+        border-radius: 4px;
+      }
+    }
+
+    .loading-state {
+      padding: 20px 0;
+    }
+
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 300px;
+      color: #9CA3AF;
+
+      :deep(.el-icon) {
+        font-size: 48px;
+        color: #D1D5DB;
+        margin-bottom: 12px;
+      }
+
+      p {
+        margin: 0;
+        font-size: 14px;
+      }
+    }
+  }
+}
+
+// 参考来源
+.sources-card {
+  .source-list {
+    padding: 0;
+    max-height: 500px;
+    overflow-y: auto;
+  }
+
+  .source-item {
+    padding: 12px;
+    border-bottom: 1px solid #E5E8F0;
+
+    &:last-child { border-bottom: none; }
+
+    .source-title {
+      font-weight: 600;
+      font-size: 13px;
+      color: #1F2937;
+      margin-bottom: 6px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .source-content {
+      font-size: 12px;
+      color: #6B7280;
+      margin-bottom: 8px;
+      line-height: 1.5;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .source-score {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+
+      .score-label {
+        color: #9CA3AF;
+      }
+
+      .score-value {
+        color: #4F6EF7;
+        font-weight: 600;
+        min-width: 35px;
+        text-align: right;
+      }
+    }
+  }
+
+  .empty-sources {
+    padding: 20px;
+    text-align: center;
+    color: #9CA3AF;
     font-size: 13px;
   }
 }
 
-.source-list {
-  max-height: 400px;
-  overflow-y: auto;
+// 反馈卡片
+.feedback-card {
+  .feedback-form {
+    padding: 20px;
+
+    .rating-group {
+      margin-bottom: 16px;
+
+      .rating-label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+        font-size: 13px;
+        color: #374151;
+      }
+    }
+
+    .feedback-input {
+      margin-bottom: 12px;
+
+      :deep(.el-textarea__inner) {
+        padding: 8px;
+        border-radius: 6px;
+      }
+    }
+
+    .feedback-btn {
+      width: 100%;
+    }
+  }
 }
 
-.source-item {
-  padding: 12px;
-  border: 1px solid #E5E8F0;
-  border-radius: 8px;
-  margin-bottom: 12px;
-
-  &:last-child { margin-bottom: 0; }
-
-  .source-title {
-    font-weight: 600;
-    margin-bottom: 8px;
-    color: #1A2340;
-  }
-
-  .source-content {
-    font-size: 12px;
-    color: #6B7280;
-    margin-bottom: 8px;
-    line-height: 1.5;
-  }
-}
-
+// 响应式设计
 @media (max-width: 1200px) {
-  .question-layout {
+  .question-page {
     flex-direction: column;
 
-    .right-panel { width: 100%; }
+    .question-sidebar {
+      width: 100%;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .question-page {
+    padding: 12px;
+    gap: 16px;
+  }
+
+  .card {
+    margin-bottom: 16px;
+  }
+
+  .param-group {
+    flex-direction: column;
+    gap: 12px;
   }
 }
 </style>

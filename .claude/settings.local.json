@@ -32,7 +32,11 @@
       "Bash(rm *)",
       "Bash(mv *)",
       "Bash(mv \"src/main/resources/mapper/\\\\${classPrefix}Mapper.xml\" \"src/main/resources/mapper/__classPrefix__Mapper.xml\")",
-      "Bash(mv \"src/test/java/\\\\${classPrefix}ApplicationTests.java\" \"src/test/java/__classPrefix__ApplicationTests.java\")"
+      "Bash(mv \"src/test/java/\\\\${classPrefix}ApplicationTests.java\" \"src/test/java/__classPrefix__ApplicationTests.java\")",
+      "Bash(mysqldump -h 127.0.0.1 -u root auth_center --no-data)",
+      "Bash(mysql --version)",
+      "Bash(mysqldump -h 127.0.0.1 -u root -p duke_auth --no-data)",
+      "Bash(mysqldump -h 127.0.0.1 -u root -p123456 duke_auth)"
     ]
   }
 }

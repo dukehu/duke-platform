@@ -40,12 +40,17 @@ export const useUserStore = defineStore('user', {
       this.roles = res.data.roles || []
     },
     async logout() {
-      try { await logout() } catch {}
-      this.token = ''
-      this.userInfo = null
-      this.buttons = []
-      this.roles = []
-      removeToken()
+      try {
+        await logout()
+      } catch (err) {
+        console.error('Logout API error:', err)
+      } finally {
+        this.token = ''
+        this.userInfo = null
+        this.buttons = []
+        this.roles = []
+        removeToken()
+      }
     }
   }
 })
