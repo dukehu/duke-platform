@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>流式对话 Demo</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            max-width: 700px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        #chatbox {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 16px;
+            height: 400px;
+            overflow-y: auto;
+            margin-bottom: 12px;
+        }
+
+        .user-msg {
+            text-align: right;
+            margin: 8px 0;
+        }
+
+        .user-msg span {
+            background: #1890ff;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 12px;
+            display: inline-block;
+        }
+
+        .ai-msg {
+            text-align: left;
+            margin: 8px 0;
+        }
+
+        .ai-msg span {
+            background: #f0f0f0;
+            padding: 6px 12px;
+            border-radius: 12px;
+            display: inline-block;
+            white-space: pre-wrap;
+        }
+
+        #inputRow {
+            display: flex;
+            gap: 8px;
+        }
+
+        #inputBox {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        button {
+            padding: 8px 20px;
+            background: #1890ff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            background: #aaa;
+        }
+
+        #sessionTip {
+            font-size: 12px;
+            color: #999;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+<h2>流式对话 Demo</h2>
+<div id="chatbox"></div>
+<div id="inputRow">
+    <input id="inputBox" placeholder="输入消息，回车发送" onkeydown="if(event.key==='Enter') sendMsg()"/>
+    <button id="sendBtn" onclick="sendMsg()">发送</button>
+    <button onclick="clearHistory()">清空</button>
+</div>
+<div id="sessionTip"></div>
+
+<script>
+    // 用时间戳作为 sessionId，每次刷新页面是新会话
+    const sessionId = 'session_' + Date.now();
+    document.getElementById('sessionTip').innerText = '会话ID: ' + sessionId;
+
+    let currentEventSource = null;
+
+    function sendMsg() {
+        const input = document.getElementById('inputBox');
+        const message = input.value.trim();
+        if (!message) return;
+
+        // 显示用户消息
+        appendMessage('user', message);
+        input.value = '';
+
+        // 禁用发送按钮
+        document.getElementById('sendBtn').disabled = true;
+
+        // 创建 AI 消息气泡（流式填充）
+        const aiSpan = appendMessage('ai', '');
+
+        // 记录首 token 时间（验收标准）
+        const startTime = Date.now();
+        let firstToken = true;
+
+        // 关闭上一个连接
+        if (currentEventSource) currentEventSource.close();
+
+        // 建立 SSE 连接
+        const url = `http://localhost:8080/api/knowledge-qa/llm/chat/stream/langchain4j?message=${encodeURIComponent(message)}&sessionId=${encodeURIComponent(sessionId)}`;
+        currentEventSource = new EventSource(url);
+
+        currentEventSource.onmessage = function (e) {
+            if (firstToken) {
+                console.log('首 token 延迟:', Date.now() - startTime, 'ms');
+                firstToken = false;
+            }
+            aiSpan.innerText += e.data;
+            scrollToBottom();
+        };
+
+        currentEventSource.addEventListener('done', function () {
+            currentEventSource.close();
+            document.getElementById('sendBtn').disabled = false;
+        });
+
+        currentEventSource.onerror = function () {
+            currentEventSource.close();
+            document.getElementById('sendBtn').disabled = false;
+        };
+    }
+
+    function appendMessage(role, text) {
+        const box = document.getElementById('chatbox');
+        const div = document.createElement('div');
+        div.className = role === 'user' ? 'user-msg' : 'ai-msg';
+        const span = document.createElement('span');
+        span.innerText = text;
+        div.appendChild(span);
+        box.appendChild(div);
+        scrollToBottom();
+        return span;
+    }
+
+    function scrollToBottom() {
+        const box = document.getElementById('chatbox');
+        box.scrollTop = box.scrollHeight;
+    }
+
+    function clearHistory() {
+        fetch(`/chat/history/${sessionId}`, {method: 'DELETE'});
+        document.getElementById('chatbox').innerHTML = '';
+    }
+</script>
+</body>
+</html>

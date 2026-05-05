@@ -1,6 +1,5 @@
 package com.duke.knowledgeqa.service;
 
-import com.duke.knowledgeqa.dto.VectorParamsDTO;
 import com.duke.knowledgeqa.vo.CollectionInfoVO;
 import lombok.Builder;
 import lombok.Data;

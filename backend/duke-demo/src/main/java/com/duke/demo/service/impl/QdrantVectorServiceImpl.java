@@ -1,6 +1,5 @@
 package com.duke.knowledgeqa.service.impl;
 
-import com.duke.knowledgeqa.dto.VectorParamsDTO;
 import com.duke.knowledgeqa.service.IQdrantVectorService;
 import com.duke.knowledgeqa.vo.CollectionInfoVO;
 import com.google.common.util.concurrent.ListenableFuture;

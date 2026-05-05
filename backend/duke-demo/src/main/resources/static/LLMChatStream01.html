@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLM 流式输出测试</title>
+</head>
+<body>
+<script type="text/javascript" >
+    function processLine(line) {
+        if (line.startsWith("data:")) {
+            const content = line.substring(5).trim();
+            if (content && content !== "[DONE]") {
+                document.getElementById("output").innerText += content;
+            }
+        }
+    }
+
+    function handleChunk(chunk) {
+        const lines = chunk.split("\n");
+        lines.forEach(processLine);
+    }
+
+    function read(reader) {
+        return reader.read().then(({done, value}) => {
+            if (done) return;
+
+            const chunk = new TextDecoder("utf-8").decode(value);
+            handleChunk(chunk);
+
+            return read(reader);
+        });
+    }
+
+    function startStream() {
+        const messages = {
+            "temperature": 0.7,
+            "maxTokens": 512,
+            "messages": [
+                {
+                    "role": "system",
+                    "content": "你是一个诗人，只用古诗体回答"
+                },
+                {
+                    "role": "user",
+                    "content": "介绍一下春天"
+                }
+            ]
+        }
+
+        fetch("http://localhost:8080/api/knowledge-qa/llm/chat/stream", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify(messages)
+        }).then(res => {
+            const reader = res.body.getReader();
+            read(reader);
+        });
+    }
+</script>
+
+<button onclick="startStream()">开始流式输出</button>
+<div id="output"></div>
+
+</body>
+</html>

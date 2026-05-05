@@ -4,7 +4,6 @@ import cn.hutool.http.HttpRequest;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
-import com.duke.knowledgeqa.config.properties.EmbeddingProperties;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 
