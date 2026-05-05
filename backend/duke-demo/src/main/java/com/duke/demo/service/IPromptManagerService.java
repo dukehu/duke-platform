@@ -7,7 +7,7 @@ import java.util.Map;
 /**
  * 项目二：Prompt 版本管理接口
  */
-public interface PromptManagerService {
+public interface IPromptManagerService {
 
     // ── 模板 CRUD ──────────────────────────────────────────────────
 

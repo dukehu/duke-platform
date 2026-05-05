@@ -1,7 +1,8 @@
-package com.duke.knowledgeqa.service.impl;
+package com.duke.demo.service.impl;
 
-import com.duke.knowledgeqa.service.IQdrantVectorService;
-import com.duke.knowledgeqa.vo.CollectionInfoVO;
+import com.duke.demo.dto.VectorParamsDTO;
+import com.duke.demo.service.IQdrantVectorService;
+import com.duke.demo.vo.CollectionInfoVO;
 import com.google.common.util.concurrent.ListenableFuture;
 import io.qdrant.client.PointIdFactory;
 import io.qdrant.client.QdrantClient;

@@ -1,4 +1,4 @@
-package com.duke.knowledgeqa.config.properties;
+package com.duke.demo.config.properties;
 
 
 import lombok.Data;
@@ -11,9 +11,9 @@ public class SiliconFlowProperties {
     // api文档：https://docs.siliconflow.cn/cn/api-reference/chat-completions/chat-completions
 
     // java 代码
-    // private String apiUrl = "https://api.siliconflow.cn/v1/chat/completions";
+     private String apiUrl4j = "https://api.siliconflow.cn/v1/chat/completions";
     // LangChain4j
-    private String apiUrl = "https://api.siliconflow.cn/v1";
+    private String apiUrl4LangChain = "https://api.siliconflow.cn/v1";
     private String apiKey = "sk-xzxfednykotdhevrxuqpyrzjsfksdmjtdtwkojqopvoycguw";
     private String defaultModel = "Qwen/Qwen2.5-7B-Instruct";
 }

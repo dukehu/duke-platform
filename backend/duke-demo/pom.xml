@@ -11,9 +11,9 @@
         <relativePath>../duke-parent/pom.xml</relativePath>
     </parent>
 
-    <artifactId>duke-knowledge-qa</artifactId>
-    <name>duke-knowledge-qa</name>
-    <description>企业级私有知识库问答系统</description>
+    <artifactId>duke-demo</artifactId>
+    <name>duke-demo</name>
+    <description>duke-demo</description>
 
     <properties>
         <protobuf.version>3.24.0</protobuf.version>

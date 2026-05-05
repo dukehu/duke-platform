@@ -1,9 +1,9 @@
-package com.duke.knowledgeqa.controller;
+package com.duke.demo.controller;
 
+import com.duke.demo.config.properties.SiliconFlowProperties;
+import com.duke.demo.entity.ChatHistoryStore;
 import com.duke.framework.common.Result;
 import com.duke.framework.exception.BusinessException;
-import com.duke.knowledgeqa.config.properties.SiliconFlowProperties;
-import com.duke.knowledgeqa.entity.ChatHistoryStore;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.langchain4j.data.message.AiMessage;
@@ -62,7 +62,7 @@ public class LLMController {
             // 发送请求
             OkHttpClient client = new OkHttpClient();
             Request request = new Request.Builder()
-                    .url(siliconFlowProperties.getApiUrl())
+                    .url(siliconFlowProperties.getApiUrl4j())
                     .addHeader("Authorization", "Bearer " + siliconFlowProperties.getApiKey())
                     .addHeader("Content-Type", APPLICATION_JSON)
                     .post(okhttp3.RequestBody.create(objectMapper.writeValueAsString(reqParams), okhttp3.MediaType.get("application/json")))
@@ -97,7 +97,7 @@ public class LLMController {
                         .build();
 
                 Request request = new Request.Builder()
-                        .url(siliconFlowProperties.getApiUrl())
+                        .url(siliconFlowProperties.getApiUrl4j())
                         .addHeader("Authorization", "Bearer " + siliconFlowProperties.getApiKey())
                         .addHeader("Content-Type", "application/json")
                         .post(okhttp3.RequestBody.create(

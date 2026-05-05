@@ -1,7 +1,7 @@
-package com.demo.service.impl;
+package com.duke.demo.service.impl;
 
-import com.demo.config.SiliconFlowProperties;
-import com.demo.service.SiliconFlowService;
+import com.duke.demo.config.properties.SiliconFlowProperties;
+import com.duke.demo.service.ISiliconFlowService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -13,7 +13,7 @@ import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 @Service
-public class SiliconFlowServiceImpl implements SiliconFlowService {
+public class SiliconFlowServiceImpl implements ISiliconFlowService {
 
     private static final MediaType JSON_TYPE = MediaType.get("application/json; charset=utf-8");
 
@@ -40,9 +40,9 @@ public class SiliconFlowServiceImpl implements SiliconFlowService {
     public String chat(String systemPrompt, String userPrompt) {
         try {
             ObjectNode body = objectMapper.createObjectNode();
-            body.put("model", props.getModel());
-            body.put("temperature", 0.7);
-            body.put("max_tokens", 1024);
+            body.put("model", props.getDefaultModel());
+            body.put("temperature", 0.1); // 采样系数
+            body.put("max_tokens", 1024); // 限制大模型最多能输出多少个字
 
             ArrayNode messages = body.putArray("messages");
 
@@ -57,7 +57,7 @@ public class SiliconFlowServiceImpl implements SiliconFlowService {
             user.put("content", userPrompt);
 
             Request request = new Request.Builder()
-                    .url(props.getBaseUrl())
+                    .url(props.getApiUrl4j())
                     .header("Authorization", "Bearer " + props.getApiKey())
                     .header("Content-Type", "application/json")
                     .post(RequestBody.create(objectMapper.writeValueAsString(body), JSON_TYPE))
@@ -78,6 +78,6 @@ public class SiliconFlowServiceImpl implements SiliconFlowService {
 
     @Override
     public String getModel() {
-        return props.getModel();
+        return props.getDefaultModel();
     }
 }

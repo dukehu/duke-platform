@@ -1,4 +1,4 @@
-package com.duke.knowledgeqa.config.properties;
+package com.duke.demo.config.properties;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;

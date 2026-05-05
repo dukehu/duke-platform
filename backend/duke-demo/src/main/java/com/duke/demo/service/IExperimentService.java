@@ -5,7 +5,7 @@ import java.util.List;
 /**
  * 项目一：Prompt 模式对比实验接口
  */
-public interface ExperimentService {
+public interface IExperimentService {
 
     /**
      * 运行指定模式

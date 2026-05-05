@@ -1,13 +1,12 @@
-package com.demo.config;
+package com.duke.demo.config.properties;
 
+import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 @Component
+@Data
 @ConfigurationProperties(prefix = "prompt")
 public class PromptProperties {
-    private String storageDir;
-
-    public String getStorageDir() { return storageDir; }
-    public void setStorageDir(String storageDir) { this.storageDir = storageDir; }
+    private String storageDir = "prompts";
 }

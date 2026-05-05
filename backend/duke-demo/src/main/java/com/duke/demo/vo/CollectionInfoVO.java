@@ -1,6 +1,7 @@
-package com.duke.knowledgeqa.vo;
+package com.duke.demo.vo;
 
-import lombok.*;
+import lombok.Builder;
+import lombok.Data;
 
 @Data
 @Builder

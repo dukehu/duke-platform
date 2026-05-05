@@ -1,7 +1,8 @@
 package com.duke.demo.service.impl;
 
-import com.demo.config.PromptProperties;
-import com.demo.service.PromptManagerService;
+import com.duke.demo.config.properties.PromptProperties;
+import com.duke.demo.service.IPromptManagerService;
+import com.duke.framework.exception.BusinessException;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import org.slf4j.Logger;
@@ -12,12 +13,15 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 @Service
-public class PromptManagerServiceImpl implements PromptManagerService {
+public class PromptManagerServiceImpl implements IPromptManagerService {
 
     private static final Logger log = LoggerFactory.getLogger(PromptManagerServiceImpl.class);
 
@@ -61,7 +65,7 @@ public class PromptManagerServiceImpl implements PromptManagerService {
     @PreDestroy
     public void destroy() throws IOException {
         if (watchExecutor != null) watchExecutor.shutdownNow();
-        if (watchService  != null) watchService.close();
+        if (watchService != null) watchService.close();
     }
 
     // ── 热更新 ────────────────────────────────────────────────────────
@@ -80,7 +84,10 @@ public class PromptManagerServiceImpl implements PromptManagerService {
                     // 新建子目录时也注册监听
                     if (event.kind() == StandardWatchEventKinds.ENTRY_CREATE
                             && Files.isDirectory(changed)) {
-                        try { registerDir(changed); } catch (IOException ignored) {}
+                        try {
+                            registerDir(changed);
+                        } catch (IOException ignored) {
+                        }
                     }
 
                     if (changed.toString().endsWith(".txt")) {
@@ -108,7 +115,7 @@ public class PromptManagerServiceImpl implements PromptManagerService {
         try {
             Path rel = storageDir.relativize(filePath);
             if (rel.getNameCount() < 2) return null;
-            String name    = rel.getName(0).toString();
+            String name = rel.getName(0).toString();
             String version = rel.getFileName().toString().replace(".txt", "");
             return buildKey(name, version);
         } catch (Exception e) {
@@ -141,7 +148,7 @@ public class PromptManagerServiceImpl implements PromptManagerService {
 
     @Override
     public void saveTemplate(String name, String version, String template) {
-        Path dir  = storageDir.resolve(name);
+        Path dir = storageDir.resolve(name);
         Path file = dir.resolve(version + ".txt");
         try {
             Files.createDirectories(dir);
@@ -150,7 +157,7 @@ public class PromptManagerServiceImpl implements PromptManagerService {
             cache.put(buildKey(name, version), template);
             log.info("[保存] {} v{}", name, version);
         } catch (IOException e) {
-            throw new RuntimeException("写入模板失败: " + file, e);
+            throw new BusinessException("写入模板失败: " + file);
         }
     }
 
@@ -162,7 +169,7 @@ public class PromptManagerServiceImpl implements PromptManagerService {
             cache.remove(buildKey(name, version));
             log.info("[删除] {} v{}", name, version);
         } catch (IOException e) {
-            throw new RuntimeException("删除模板失败: " + file, e);
+            throw new BusinessException("删除模板失败: " + file);
         }
     }
 
@@ -231,7 +238,7 @@ public class PromptManagerServiceImpl implements PromptManagerService {
         }
 
         int total = config.values().stream().mapToInt(Integer::intValue).sum();
-        int slot  = Math.abs(userId.hashCode()) % total;
+        int slot = Math.abs(userId.hashCode()) % total;
 
         int cumulative = 0;
         for (Map.Entry<String, Integer> e : config.entrySet()) {
@@ -257,10 +264,10 @@ public class PromptManagerServiceImpl implements PromptManagerService {
         }
         try {
             String content = Files.readString(file, StandardCharsets.UTF_8);
-            log.info("[加载] {} v{} ({}chars)", name, version, content.length());
+            log.info("[加载] {} {} ({}chars)", name, version, content.length());
             return content;
         } catch (IOException e) {
-            throw new RuntimeException("读取模板失败: " + file, e);
+            throw new BusinessException("读取模板失败: " + file);
         }
     }
 

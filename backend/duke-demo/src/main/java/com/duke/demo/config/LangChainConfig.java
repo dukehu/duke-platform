@@ -1,6 +1,6 @@
-package com.duke.knowledgeqa.config;
+package com.duke.demo.config;
 
-import com.duke.knowledgeqa.config.properties.SiliconFlowProperties;
+import com.duke.demo.config.properties.SiliconFlowProperties;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
 import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
 import lombok.AllArgsConstructor;
@@ -16,7 +16,7 @@ public class LangChainConfig {
     public StreamingChatLanguageModel streamingChatModel() {
         return OpenAiStreamingChatModel.builder()
                 .apiKey(siliconFlowProperties.getApiKey())
-                .baseUrl(siliconFlowProperties.getApiUrl())
+                .baseUrl(siliconFlowProperties.getApiUrl4LangChain())
                 .modelName(siliconFlowProperties.getDefaultModel())
                 .temperature(1.0)
                 .build();

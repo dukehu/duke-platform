@@ -1,10 +1,10 @@
-package com.duke.knowledgeqa.controller;
+package com.duke.demo.controller;
 
+import com.duke.demo.dto.VectorParamsDTO;
+import com.duke.demo.service.IQdrantVectorService;
+import com.duke.demo.util.QwenEmbeddingUtil;
+import com.duke.demo.vo.CollectionInfoVO;
 import com.duke.framework.common.Result;
-import com.duke.knowledgeqa.dto.VectorParamsDTO;
-import com.duke.knowledgeqa.service.IQdrantVectorService;
-import com.duke.knowledgeqa.util.QwenEmbeddingUtil;
-import com.duke.knowledgeqa.vo.CollectionInfoVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;

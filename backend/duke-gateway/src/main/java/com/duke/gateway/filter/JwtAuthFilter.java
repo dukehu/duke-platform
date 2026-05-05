@@ -52,7 +52,7 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
             "/api/auth/github/callback",
             "/api/auth/captcha",
             "/api/transformer/**",
-            "/api/knowledge-qa/**",
+            "/api/demo/**",
             // API 文档（网关统一管理）
             "/swagger-ui.html",
             "/swagger-ui/**",
@@ -60,7 +60,8 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
             // 服务 API 文档（通过业务路由聚合）
             "/api/auth/v3/api-docs/**",
             "/api/transformer/v3/api-docs/**",
-            "/api/knowledge-qa/v3/api-docs/**"
+            "/api/knowledge-qa/v3/api-docs/**",
+            "/api/demo/v3/api-docs/**"
     );
 
     // 需要从外部请求中剥离的敏感请求头，防止客户端伪造用户身份

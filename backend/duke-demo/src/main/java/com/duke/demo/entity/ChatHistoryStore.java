@@ -1,4 +1,4 @@
-package com.duke.knowledgeqa.entity;
+package com.duke.demo.entity;
 
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;

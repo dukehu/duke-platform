@@ -49,7 +49,7 @@ public class ApiPermissionFilter implements GlobalFilter, Ordered {
             "/api/auth/github/callback",
             "/api/auth/captcha",
             "/api/transformer/**",
-            "/api/knowledge-qa/**",
+            "/api/demo/**",
             // 网关 Swagger UI 和 API 文档
             "/swagger-ui.html",
             "/swagger-ui/**",
@@ -57,7 +57,8 @@ public class ApiPermissionFilter implements GlobalFilter, Ordered {
             // 服务 API 文档（通过业务路由聚合）
             "/api/auth/v3/api-docs/**",
             "/api/transformer/v3/api-docs/**",
-            "/api/knowledge-qa/v3/api-docs/**"
+            "/api/knowledge-qa/v3/api-docs/**",
+            "/api/demo/v3/api-docs/**"
     );
 
     @Override

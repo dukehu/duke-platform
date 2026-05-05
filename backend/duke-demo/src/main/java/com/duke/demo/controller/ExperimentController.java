@@ -1,94 +1,93 @@
-package com.demo.controller;
+package com.duke.demo.controller;
 
-import com.demo.service.ExperimentService;
-import com.demo.service.ExperimentService.ExperimentResult;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import com.duke.demo.service.IExperimentService;
+import com.duke.framework.common.Result;
+import lombok.AllArgsConstructor;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.Map;
 
 /**
  * 项目一：Prompt 模式对比实验接口
- *
- * POST /api/experiment/run          —— 运行单种模式
- * POST /api/experiment/run-all      —— 对同一段代码跑全部5种模式
+ * <p>
+ * POST /api/experiment/run       运行单种模式
+ * POST /api/experiment/run-all   同一段代码跑全部5种模式
  */
 @RestController
-@RequestMapping("/api/experiment")
+@RequestMapping("/experiment")
+@AllArgsConstructor
 public class ExperimentController {
 
-    private final ExperimentService experimentService;
-
-    public ExperimentController(ExperimentService experimentService) {
-        this.experimentService = experimentService;
-    }
+    private final IExperimentService experimentService;
 
     /**
      * 运行单种模式
-     *
+     * <p>
      * POST /api/experiment/run
      * {
-     *   "mode": "zero-shot",   // zero-shot | role-shot | few-shot | cot | structured
-     *   "code": "catch(Exception e) {}"
+     * "mode": "structured",
+     * "code": "catch(Exception e) {}"
      * }
+     * mode 可选值：zero-shot | role-shot | few-shot | cot | structured
      */
     @PostMapping("/run")
-    public ResponseEntity<?> run(@RequestBody RunRequest req) {
+    public Result<Map<String, Object>> run(@RequestBody RunRequest req) {
         if (req.code() == null || req.code().isBlank()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "code 不能为空"));
+            return Result.fail("code 不能为空");
         }
         if (req.mode() == null || req.mode().isBlank()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "mode 不能为空，可选值：zero-shot, role-shot, few-shot, cot, structured"));
+            return Result.fail("mode 不能为空，可选值：zero-shot, role-shot, few-shot, cot, structured");
         }
-        try {
-            ExperimentResult result = experimentService.runMode(req.mode(), req.code());
-            return ResponseEntity.ok(toResponse(result));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-        }
+        IExperimentService.ExperimentResult result = experimentService.runMode(req.mode(), req.code());
+        return Result.success(toMap(result));
     }
 
     /**
-     * 对同一段代码跑全部5种模式，返回对比结果
-     *
+     * 同一段代码跑全部5种模式，返回对比结果 + 汇总统计
+     * <p>
      * POST /api/experiment/run-all
      * {
-     *   "code": "catch(Exception e) {}"
+     * "code": "catch(Exception e) {}"
      * }
      */
     @PostMapping("/run-all")
-    public ResponseEntity<?> runAll(@RequestBody RunAllRequest req) {
+    public Result<Map<String, Object>> runAll(@RequestBody RunAllRequest req) {
         if (req.code() == null || req.code().isBlank()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "code 不能为空"));
+            return Result.fail("code 不能为空");
         }
 
-        List<ExperimentResult> results = experimentService.runAllModes(req.code());
+        List<IExperimentService.ExperimentResult> results = experimentService.runAllModes(req.code());
 
-        // 汇总统计
-        long formatPassCount = results.stream().filter(ExperimentResult::formatOk).count();
-        double avgLatency    = results.stream().mapToLong(ExperimentResult::latencyMs).average().orElse(0);
+        long formatPassCount = results.stream().filter(IExperimentService.ExperimentResult::formatOk).count();
+        long avgLatency = (long) results.stream().mapToLong(IExperimentService.ExperimentResult::latencyMs).average().orElse(0);
 
-        return ResponseEntity.ok(Map.of(
-                "code",           req.code(),
-                "results",        results.stream().map(this::toResponse).toList(),
+        return Result.success(Map.of(
+                "code", req.code(),
+                "results", results.stream().map(this::toMap).toList(),
                 "summary", Map.of(
-                        "totalModes",     results.size(),
+                        "totalModes", results.size(),
                         "formatPassCount", formatPassCount,
-                        "avgLatencyMs",   (long) avgLatency
+                        "avgLatencyMs", avgLatency
                 )
         ));
     }
 
-    private Map<String, Object> toResponse(ExperimentResult r) {
+    private Map<String, Object> toMap(IExperimentService.ExperimentResult r) {
         return Map.of(
-                "mode",      r.mode(),
-                "response",  r.response(),
+                "mode", r.mode(),
+                "response", r.response(),
                 "latencyMs", r.latencyMs(),
-                "formatOk",  r.formatOk()
+                "formatOk", r.formatOk()
         );
     }
 
-    record RunRequest(String mode, String code) {}
-    record RunAllRequest(String code) {}
+    record RunRequest(String mode, String code) {
+    }
+
+    record RunAllRequest(String code) {
+    }
 }

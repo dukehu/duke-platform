@@ -3,7 +3,7 @@ package com.duke.demo.service;
 /**
  * 硅基流动 LLM 调用接口
  */
-public interface SiliconFlowService {
+public interface ISiliconFlowService {
 
     /**
      * 只传 userPrompt，无 systemPrompt

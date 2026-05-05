@@ -1,4 +1,4 @@
-package com.duke.knowledgeqa.dto;
+package com.duke.demo.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;

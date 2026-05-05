@@ -1,11 +1,11 @@
 server:
   port: 8083
   servlet:
-    context-path: /knowledge-qa
+    context-path: /demo
 
 spring:
   application:
-    name: duke-knowledge-qa
+    name: duke-demo
   servlet:
     multipart:
       enabled: true
@@ -26,11 +26,11 @@ spring:
   config:
     import:
       - nacos:duke-common.yml?refreshEnabled=true
-      - nacos:duke-knowledge-qa.yml?refreshEnabled=true
+      - nacos:duke-demo.yml?refreshEnabled=true
 
 swagger:
-  title: 知识库问答 API
-  description: 企业级私有知识库问答系统接口文档
+  title: demo API
+  description: demo接口文档
   version: 1.0.0
   enable-security: true
-  server-url: http://localhost:8080/api/knowledge-qa
+  server-url: http://localhost:8080/api/demo

@@ -1,6 +1,6 @@
-package com.duke.knowledgeqa.config;
+package com.duke.demo.config;
 
-import com.duke.knowledgeqa.config.properties.QdrantProperties;
+import com.duke.demo.config.properties.QdrantProperties;
 import io.qdrant.client.QdrantClient;
 import io.qdrant.client.QdrantGrpcClient;
 import lombok.AllArgsConstructor;
