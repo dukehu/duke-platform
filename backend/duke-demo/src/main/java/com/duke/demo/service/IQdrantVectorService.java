@@ -74,6 +74,14 @@ public interface IQdrantVectorService {
     List<SearchResult> search(String collectionName, List<Float> queryVector, int limit, float scoreThreshold);
 
     /**
+     * 批量插入向量（upsert）
+     *
+     * @param collectionName 集合名
+     * @param chunks         分块列表，每项含文本、向量、元数据
+     */
+    void batchInsertVectors(String collectionName, List<VectorChunk> chunks);
+
+    /**
      * 搜索结果 DTO
      */
     @Builder
@@ -82,5 +90,16 @@ public interface IQdrantVectorService {
         public long id;
         public float score;
         public Map<String, Object> payload;
+    }
+
+    /**
+     * 向量分块数据载体（用于批量插入）
+     */
+    @Builder
+    @Data
+    class VectorChunk {
+        private String text;
+        private List<Float> embedding;
+        private Map<String, Object> metadata;
     }
 }

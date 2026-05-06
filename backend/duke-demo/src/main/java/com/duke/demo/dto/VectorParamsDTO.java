@@ -9,6 +9,6 @@ public class VectorParamsDTO {
     @NotBlank(message = "集合名称不能为空")
     private String collectionName;
 
-    private Integer vectorSize = 2048;
+    private Integer vectorSize = 1024;
 
 }

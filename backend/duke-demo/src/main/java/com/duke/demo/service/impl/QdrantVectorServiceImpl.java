@@ -100,9 +100,11 @@ public class QdrantVectorServiceImpl implements IQdrantVectorService {
         log.info("Collection {} deleted successfully: {}", collectionName, collectionOperationResponse.getResult());
     }
 
+    @SneakyThrows
     @Override
     public boolean collectionExists(String collectionName) {
-        return false;
+        ListenableFuture<Boolean> existsFuture = qdrantClient.collectionExistsAsync(collectionName);
+        return existsFuture.get();
     }
 
     @Override
@@ -128,6 +130,22 @@ public class QdrantVectorServiceImpl implements IQdrantVectorService {
         List<Common.PointId> pointIds = new ArrayList<>();
         pointIds.add(PointIdFactory.id(id));
         qdrantClient.deleteAsync(collectionName, pointIds);
+    }
+
+    @SneakyThrows
+    @Override
+    public void batchInsertVectors(String collectionName, List<VectorChunk> chunks) {
+        log.info("Batch inserting {} vectors into collection {}", chunks.size(), collectionName);
+        List<Points.PointStruct> points = chunks.stream()
+                .map(chunk -> Points.PointStruct.newBuilder()
+                        .setId(PointIdFactory.id(UUID.randomUUID()))
+                        .setVectors(VectorsFactory.vectors(chunk.getEmbedding()))
+                        .putPayload("text", ValueFactory.value(chunk.getText()))
+                        .putAllPayload(toValueMap(chunk.getMetadata()))
+                        .build())
+                .toList();
+        qdrantClient.upsertAsync(collectionName, points).get();
+        log.info("Batch insert completed for collection {}", collectionName);
     }
 
     @SneakyThrows
