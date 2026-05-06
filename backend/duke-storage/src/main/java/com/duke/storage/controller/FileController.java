@@ -18,6 +18,7 @@ import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -39,6 +40,7 @@ public class FileController {
     
     @Operation(summary = "上传文件")
     @PostMapping("/upload")
+    @PreAuthorize("hasAuthority('storage:file:upload')")
     public Result<FileVO> upload(@RequestParam("file") MultipartFile file) {
         FileVO fileVO = fileStorageService.uploadFile(file);
         return Result.success(fileVO);
@@ -46,6 +48,7 @@ public class FileController {
     
     @Operation(summary = "校验文件是否存在（秒传）")
     @GetMapping("/check/exist")
+    @PreAuthorize("hasAuthority('storage:file:list')")
     public Result<FileCheckVO> checkExist(
             @RequestParam String fileName,
             @RequestParam Long fileSize) {
@@ -55,6 +58,7 @@ public class FileController {
     
     @Operation(summary = "上传分片")
     @PostMapping("/chunk/upload")
+    @PreAuthorize("hasAuthority('storage:file:upload')")
     public Result<Void> uploadChunk(
             ChunkUploadDTO dto,
             @RequestParam("chunk") MultipartFile chunk) {
@@ -69,6 +73,7 @@ public class FileController {
     
     @Operation(summary = "检查分片上传状态")
     @GetMapping("/chunk/check")
+    @PreAuthorize("hasAuthority('storage:file:list')")
     public Result<ChunkCheckVO> checkChunks(
             @RequestParam String chunkId,
             @RequestParam Integer chunkTotal) {
@@ -78,6 +83,7 @@ public class FileController {
     
     @Operation(summary = "合并分片")
     @PostMapping("/chunk/merge")
+    @PreAuthorize("hasAuthority('storage:file:upload')")
     public Result<FileVO> mergeChunks(@RequestBody ChunkMergeDTO dto) {
         FileVO fileVO = fileStorageService.mergeChunks(dto);
         return Result.success(fileVO);
@@ -85,6 +91,7 @@ public class FileController {
     
     @Operation(summary = "获取文件信息")
     @GetMapping("/{fileId}")
+    @PreAuthorize("hasAuthority('storage:file:list')")
     public Result<FileVO> getById(@PathVariable Long fileId) {
         FileVO fileVO = fileStorageService.getFileById(fileId);
         return Result.success(fileVO);
@@ -92,6 +99,7 @@ public class FileController {
     
     @Operation(summary = "分页查询文件列表")
     @GetMapping("/list")
+    @PreAuthorize("hasAuthority('storage:file:list')")
     public Result<PageResult<FileVO>> pageFiles(FileQueryDTO dto) {
         PageResult<FileVO> result = fileStorageService.pageFiles(dto);
         return Result.success(result);
@@ -99,6 +107,7 @@ public class FileController {
     
     @Operation(summary = "删除文件")
     @DeleteMapping("/{fileId}")
+    @PreAuthorize("hasAuthority('storage:file:delete')")
     public Result<Void> delete(@PathVariable Long fileId) {
         fileStorageService.deleteFile(fileId);
         return Result.success();
@@ -106,6 +115,7 @@ public class FileController {
     
     @Operation(summary = "下载文件")
     @GetMapping("/download/{fileId}")
+    @PreAuthorize("hasAuthority('storage:file:download')")
     public ResponseEntity<InputStreamResource> download(@PathVariable Long fileId) {
         SysFile sysFile = fileStorageService.getFileEntity(fileId);
         InputStream inputStream = fileStorageService.getFileInputStream(fileId);
@@ -122,6 +132,7 @@ public class FileController {
     
     @Operation(summary = "预览文件")
     @GetMapping("/preview/{fileId}")
+    @PreAuthorize("hasAuthority('storage:file:preview')")
     public ResponseEntity<InputStreamResource> preview(@PathVariable Long fileId) {
         SysFile sysFile = fileStorageService.getFileEntity(fileId);
         InputStream inputStream = fileStorageService.getFileInputStream(fileId);
