@@ -52,21 +52,21 @@ CREATE TABLE IF NOT EXISTS sys_file_chunk (
 -- ============================================================
 -- Data: sys_app - 应用初始化数据
 -- ============================================================
-INSERT INTO `sys_app` (`id`, `app_code`, `app_name`, `description`, `status`, `sort`, `create_by`, `create_time`, `update_by`, `update_time`, `deleted`)
+INSERT INTO `sys_app` (`id`, `app_code`, `app_name`, `app_desc`, `status`, `sort_order`, `create_by`, `create_time`, `update_by`, `update_time`, `deleted`)
 VALUES (7, 'duke-storage', '文件服务', '企业级文件存储与管理服务', 1, 0, 'system', NOW(), NULL, NOW(), 0);
 
 -- ============================================================
 -- Data: sys_api - API接口资源初始化数据
 -- ============================================================
-INSERT INTO `sys_api` (`id`, `app_id`, `controller_class`, `controller_name`, `method_name`, `path`, `http_method`, `summary`, `permission`, `status`, `create_by`, `create_time`, `update_by`, `update_time`, `deleted`)
+INSERT INTO `sys_api` (`id`, `app_id`, `controller_class`, `controller_name`, `api_name`, `api_path`, `api_method`, `api_desc`, `permission`, `status`, `create_by`, `create_time`, `update_by`, `update_time`, `deleted`)
 VALUES 
-(300, 7, 'com.duke.storage.controller.FileController', '文件管理', '上传文件', '/files/upload', 'POST', '上传文件', 'storage:file:upload', 1, 'system', NOW(), 'system', NOW(), 0),
-(301, 7, 'com.duke.storage.controller.FileController', '文件管理', '校验文件是否存在（秒传）', '/files/check/exist', 'GET', '校验文件是否存在（秒传）', 'storage:file:list', 1, 'system', NOW(), 'system', NOW(), 0),
-(302, 7, 'com.duke.storage.controller.FileController', '文件管理', '上传分片', '/files/chunk/upload', 'POST', '上传分片', 'storage:file:upload', 1, 'system', NOW(), 'system', NOW(), 0),
-(303, 7, 'com.duke.storage.controller.FileController', '文件管理', '检查分片上传状态', '/files/chunk/check', 'GET', '检查分片上传状态', 'storage:file:list', 1, 'system', NOW(), 'system', NOW(), 0),
-(304, 7, 'com.duke.storage.controller.FileController', '文件管理', '合并分片', '/files/chunk/merge', 'POST', '合并分片', 'storage:file:upload', 1, 'system', NOW(), 'system', NOW(), 0),
-(305, 7, 'com.duke.storage.controller.FileController', '文件管理', '获取文件信息', '/files/{fileId}', 'GET', '获取文件信息', 'storage:file:list', 1, 'system', NOW(), 'system', NOW(), 0),
-(306, 7, 'com.duke.storage.controller.FileController', '文件管理', '分页查询文件列表', '/files/list', 'GET', '分页查询文件列表', 'storage:file:list', 1, 'system', NOW(), 'system', NOW(), 0),
-(307, 7, 'com.duke.storage.controller.FileController', '文件管理', '删除文件', '/files/{fileId}', 'DELETE', '删除文件', 'storage:file:delete', 1, 'system', NOW(), 'system', NOW(), 0),
-(308, 7, 'com.duke.storage.controller.FileController', '文件管理', '下载文件', '/files/download/{fileId}', 'GET', '下载文件', 'storage:file:download', 1, 'system', NOW(), 'system', NOW(), 0),
-(309, 7, 'com.duke.storage.controller.FileController', '文件管理', '预览文件', '/files/preview/{fileId}', 'GET', '预览文件', 'storage:file:preview', 1, 'system', NOW(), 'system', NOW(), 0);
+(300, 'duke-storage', 'com.duke.storage.controller.FileController', '文件管理', '上传文件', '/files/upload', 'POST', '上传文件', 'storage:file:upload', 1, 'system', NOW(), 'system', NOW(), 0),
+(301, 'duke-storage', 'com.duke.storage.controller.FileController', '文件管理', '校验文件是否存在（秒传）', '/files/check/exist', 'GET', '校验文件是否存在（秒传）', 'storage:file:list', 1, 'system', NOW(), 'system', NOW(), 0),
+(302, 'duke-storage', 'com.duke.storage.controller.FileController', '文件管理', '上传分片', '/files/chunk/upload', 'POST', '上传分片', 'storage:file:upload', 1, 'system', NOW(), 'system', NOW(), 0),
+(303, 'duke-storage', 'com.duke.storage.controller.FileController', '文件管理', '检查分片上传状态', '/files/chunk/check', 'GET', '检查分片上传状态', 'storage:file:list', 1, 'system', NOW(), 'system', NOW(), 0),
+(304, 'duke-storage', 'com.duke.storage.controller.FileController', '文件管理', '合并分片', '/files/chunk/merge', 'POST', '合并分片', 'storage:file:upload', 1, 'system', NOW(), 'system', NOW(), 0),
+(305, 'duke-storage', 'com.duke.storage.controller.FileController', '文件管理', '获取文件信息', '/files/{fileId}', 'GET', '获取文件信息', 'storage:file:list', 1, 'system', NOW(), 'system', NOW(), 0),
+(306, 'duke-storage', 'com.duke.storage.controller.FileController', '文件管理', '分页查询文件列表', '/files/list', 'GET', '分页查询文件列表', 'storage:file:list', 1, 'system', NOW(), 'system', NOW(), 0),
+(307, 'duke-storage', 'com.duke.storage.controller.FileController', '文件管理', '删除文件', '/files/{fileId}', 'DELETE', '删除文件', 'storage:file:delete', 1, 'system', NOW(), 'system', NOW(), 0),
+(308, 'duke-storage', 'com.duke.storage.controller.FileController', '文件管理', '下载文件', '/files/download/{fileId}', 'GET', '下载文件', 'storage:file:download', 1, 'system', NOW(), 'system', NOW(), 0),
+(309, 'duke-storage', 'com.duke.storage.controller.FileController', '文件管理', '预览文件', '/files/preview/{fileId}', 'GET', '预览文件', 'storage:file:preview', 1, 'system', NOW(), 'system', NOW(), 0);

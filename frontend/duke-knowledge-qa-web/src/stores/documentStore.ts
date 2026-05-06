@@ -19,7 +19,18 @@ export const useDocumentStore = defineStore('document', () => {
     loading.value = true
     try {
       const res = await getDocuments(query) as any
-      documents.value = res.records
+      // duke-storage 返回的是文件列表，需要映射为 Document 类型
+      documents.value = (res.records || []).map((file: any) => ({
+        id: file.id,
+        title: file.originalName,
+        category: '其他', // duke-storage 没有分类字段，默认值
+        tags: [], // duke-storage 没有标签字段，默认空数组
+        status: 'PUBLISHED', // duke-storage 没有状态字段，默认已发布
+        fileType: file.fileSuffix?.toLowerCase() || '',
+        fileUrl: `/api/storage/files/preview/${file.id}`, // 使用统一的预览接口
+        fileSize: file.fileSize,
+        createTime: file.createTime
+      }))
       total.value = res.total
     } finally {
       loading.value = false

@@ -1,5 +1,6 @@
 package com.duke.gateway.filter;
 
+import com.duke.gateway.config.GatewayWhiteListConfig;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -22,7 +23,6 @@ import reactor.core.publisher.Mono;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 
 @Slf4j
 @Component
@@ -39,35 +39,6 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
     }
 
     private static final AntPathMatcher PATH_MATCHER = new AntPathMatcher();
-
-    // 白名单：无需 JWT 验证的路径（网关视角）
-    private static final List<String> WHITE_LIST = List.of(
-            // 业务接口
-            "/api/auth/login",
-            "/api/auth/logout",
-            "/api/auth/weixin/url",
-            "/api/auth/sms/send",
-            "/api/auth/sms/login",
-            "/api/auth/github/url",
-            "/api/auth/github/callback",
-            "/api/auth/captcha",
-            "/api/transformer/**",
-            "/api/demo/**",
-            // API 文档（网关统一管理）
-            "/swagger-ui.html",
-            "/swagger-ui/**",
-            "/v3/api-docs/**",
-            // 服务 API 文档（通过业务路由聚合）
-            "/api/auth/v3/api-docs/**",
-            "/api/transformer/v3/api-docs/**",
-            "/api/knowledge-qa/v3/api-docs/**",
-            "/api/demo/v3/api-docs/**",
-            // 文件预览直接放过
-            "/api/knowledge-qa/files/**"
-    );
-
-    // 需要从外部请求中剥离的敏感请求头，防止客户端伪造用户身份
-    private static final List<String> SENSITIVE_HEADERS = List.of("X-Username", "X-User-Id");
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
@@ -116,15 +87,13 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
     }
 
     private boolean isWhitelisted(String path) {
-        for (String pattern : WHITE_LIST) {
-            if (PATH_MATCHER.match(pattern, path)) return true;
-        }
-        return false;
+        return GatewayWhiteListConfig.WHITE_LIST.stream()
+                .anyMatch(pattern -> PATH_MATCHER.match(pattern, path));
     }
 
     private ServerWebExchange stripSensitiveHeaders(ServerWebExchange exchange) {
         ServerHttpRequest request = exchange.getRequest().mutate()
-                .headers(headers -> SENSITIVE_HEADERS.forEach(headers::remove))
+                .headers(headers -> GatewayWhiteListConfig.SENSITIVE_HEADERS.forEach(headers::remove))
                 .build();
         return exchange.mutate().request(request).build();
     }

@@ -7,7 +7,7 @@ import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = {"com.duke.storage", "com.duke.framework"})
 @EnableDiscoveryClient
 @MapperScan("com.duke.storage.mapper")
 @ConfigurationPropertiesScan("com.duke.storage.config.properties")

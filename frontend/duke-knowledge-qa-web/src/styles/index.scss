@@ -1,5 +1,5 @@
-@import './_variables.scss';
-@import 'element-plus/dist/index.css';
+@use 'variables' as *;
+@use 'element-plus/dist/index.css';
 
 // Reset & Base
 * {
@@ -121,7 +121,7 @@ a {
   background: $border-input;
   border-radius: 3px;
 
-  &:hover { background: darken($border-input, 10%); }
+  &:hover { background: #B8BCC9; }
 }
 
 // Utility Classes

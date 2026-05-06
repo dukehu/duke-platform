@@ -25,6 +25,11 @@ request.interceptors.request.use(config => {
 
 request.interceptors.response.use(
   response => {
+    // 如果是 blob 类型（文件下载），直接返回
+    if (response.config.responseType === 'blob') {
+      return response.data
+    }
+    
     const res = response.data as any
     if (res.code !== 200) {
       const errorMsg = res.message || '请求失败'

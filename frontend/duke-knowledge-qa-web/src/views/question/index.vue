@@ -16,7 +16,6 @@
           maxlength="1000"
           show-word-limit
           class="question-input"
-          style="height: 70vh"
         />
 
         <!-- 高级参数 -->

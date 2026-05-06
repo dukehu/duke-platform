@@ -10,13 +10,15 @@ import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Slf4j
 @Component
 public class AuthCenterClient {
 
-    // 鉴权中心的 context-path 是 /auth，所以完整路径是 /auth/internal/gateway/check
     private static final String CHECK_URI = "/auth/internal/gateway/check";
+    private static final String PERMISSIONS_URI = "/auth/internal/users/{userId}/permissions";
     private static final String HEADER_GATEWAY_SECRET = "X-Gateway-Secret";
 
     private final WebClient webClient;
@@ -76,6 +78,38 @@ public class AuthCenterClient {
                     }
                     // 服务挂了直接拦截，安全兜底
                     return Mono.just(false);
+                });
+    }
+
+    /**
+     * 获取用户权限列表
+     *
+     * @param userId 用户 ID
+     * @return 权限标识列表
+     */
+    public Mono<List<String>> getUserPermissions(Long userId) {
+        LocalDateTime start = LocalDateTime.now();
+        
+        log.debug("[获取权限-请求] userId={}", userId);
+        
+        return webClient.get()
+                .uri(PERMISSIONS_URI, userId)
+                .retrieve()
+                .bodyToMono(JsonNode.class)
+                .<List<String>>map(node -> {
+                    if (node.has("data") && node.get("data").isArray()) {
+                        List<String> permissions = new ArrayList<>();
+                        node.get("data").forEach(p -> permissions.add(p.asText()));
+                        log.debug("[获取权限-成功] userId={}, count={}", userId, permissions.size());
+                        return permissions;
+                    }
+                    log.warn("[获取权限-响应格式异常] userId={}", userId);
+                    return new ArrayList<>();
+                })
+                .onErrorResume(e -> {
+                    long cost = Duration.between(start, LocalDateTime.now()).toMillis();
+                    log.error("[获取权限-失败] userId={}, 耗时{}ms, 原因: {}", userId, cost, e.getMessage());
+                    return Mono.just(new ArrayList<String>());
                 });
     }
 }

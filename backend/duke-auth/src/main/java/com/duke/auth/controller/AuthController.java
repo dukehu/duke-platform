@@ -3,11 +3,15 @@ package com.duke.auth.controller;
 import com.duke.framework.common.Constants;
 import com.duke.framework.common.Result;
 import com.duke.auth.dto.*;
+import com.duke.auth.mapper.SysApiMapper;
+import com.duke.auth.mapper.SysRoleMapper;
 import com.duke.auth.security.JwtTokenProvider;
 import com.duke.auth.security.LoginUser;
 import com.duke.auth.service.IAuthService;
+import com.duke.auth.service.IGatewayPermissionService;
 import com.duke.auth.util.SecurityUtil;
 import com.duke.auth.vo.*;
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,7 +20,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Tag(name = "认证管理")
 @RestController
@@ -26,6 +32,9 @@ public class AuthController {
 
     private final IAuthService authService;
     private final JwtTokenProvider jwtTokenProvider;
+    private final IGatewayPermissionService gatewayPermissionService;
+    private final SysApiMapper apiMapper;
+    private final SysRoleMapper roleMapper;
 
     @Operation(summary = "用户登录（账号密码）")
     @PostMapping("/login")
@@ -110,5 +119,53 @@ public class AuthController {
     public Result<Void> changePassword(@Valid @RequestBody ChangePasswordDTO dto, HttpServletRequest request) {
         authService.changePassword(dto, request);
         return Result.success();
+    }
+
+    // ==================== 网关内部接口（仅允许网关调用）====================
+
+    /**
+     * 网关权限检查：判断指定用户是否有权限访问指定接口
+     * 仅允许网关调用，由 GatewayInternalFilter 校验 X-Gateway-Secret
+     *
+     * @param userId     用户 ID（来自 JWT）
+     * @param appId      目标服务 ID
+     * @param path       服务路径（已去掉网关前缀，如 /user/123）
+     * @param httpMethod HTTP 方法（GET/POST/PUT/DELETE）
+     * @return true=允许，false=拒绝
+     */
+    @Hidden
+    @GetMapping("/internal/gateway/check")
+    public Result<Boolean> checkGatewayPermission(
+            @RequestParam Long userId,
+            @RequestParam String appId,
+            @RequestParam String path,
+            @RequestParam String httpMethod) {
+        boolean allowed = gatewayPermissionService.checkPermission(userId, appId, path, httpMethod);
+        return Result.success(allowed);
+    }
+
+    /**
+     * 获取用户权限列表
+     * 仅允许网关调用
+     *
+     * @param userId 用户 ID
+     * @return 权限标识列表
+     */
+    @Hidden
+    @GetMapping("/internal/users/{userId}/permissions")
+    public Result<Set<String>> getUserPermissions(@PathVariable Long userId) {
+        // 判断是否为超级管理员
+        boolean superAdmin = roleMapper.countSuperAdminByUserId(userId, Constants.SUPER_ADMIN_ROLE) > 0;
+        
+        Set<String> permissions;
+        if (superAdmin) {
+            // 超级管理员拥有所有 API 权限
+            permissions = apiMapper.selectAllApiPermissions();
+        } else {
+            // 普通用户只拥有角色分配的权限
+            permissions = apiMapper.selectApiPermissionsByUserId(userId);
+        }
+        
+        return Result.success(new HashSet<>(permissions));
     }
 }

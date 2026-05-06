@@ -1,6 +1,7 @@
 package com.duke.gateway.filter;
 
 import com.duke.gateway.client.AuthCenterClient;
+import com.duke.gateway.config.GatewayWhiteListConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,6 +13,7 @@ import org.springframework.core.Ordered;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
@@ -20,10 +22,21 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
+/**
+ * API 权限过滤器 - 粗粒度权限控制
+ * 
+ * 职责：
+ * 1. 检查用户是否有访问该 API 的权限（基于 sys_api 表配置）
+ * 2. 获取用户权限列表并传递给微服务（供 @PreAuthorize 使用）
+ * 3. 快速拦截未授权请求，保护微服务
+ * 
+ * 注意：这是第一层权限检查（API 级别），微服务可以做更细粒度的业务级权限控制
+ */
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -32,36 +45,7 @@ public class ApiPermissionFilter implements GlobalFilter, Ordered {
     private static final int ORDER = -90;
     private final AuthCenterClient authCenterClient;
 
-    @Value("#{${gateway.route-prefix-map}}")
-    private Map<String, String> routePrefixMap;
-
     private static final AntPathMatcher PATH_MATCHER = new AntPathMatcher();
-
-    private static final List<String> WHITE_LIST = List.of(
-            // 业务接口
-            "/api/auth/login",
-            "/api/auth/logout",
-            "/api/auth/weixin/url",
-            "/api/auth/weixin/callback",
-            "/api/auth/sms/send",
-            "/api/auth/sms/login",
-            "/api/auth/github/url",
-            "/api/auth/github/callback",
-            "/api/auth/captcha",
-            "/api/transformer/**",
-            "/api/demo/**",
-            // 网关 Swagger UI 和 API 文档
-            "/swagger-ui.html",
-            "/swagger-ui/**",
-            "/v3/api-docs/**",
-            // 服务 API 文档（通过业务路由聚合）
-            "/api/auth/v3/api-docs/**",
-            "/api/transformer/v3/api-docs/**",
-            "/api/knowledge-qa/v3/api-docs/**",
-            "/api/demo/v3/api-docs/**",
-            // 文件预览直接放过
-            "/api/knowledge-qa/files/**"
-    );
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
@@ -70,7 +54,7 @@ public class ApiPermissionFilter implements GlobalFilter, Ordered {
         String method = exchange.getRequest().getMethod().name();
 
         // 2. 白名单放行
-        if (WHITE_LIST.stream().anyMatch(p -> PATH_MATCHER.match(p, gatewayPath))) {
+        if (GatewayWhiteListConfig.WHITE_LIST.stream().anyMatch(p -> PATH_MATCHER.match(p, gatewayPath))) {
             return chain.filter(exchange);
         }
 
@@ -88,18 +72,10 @@ public class ApiPermissionFilter implements GlobalFilter, Ordered {
         }
 
         String routeId = route.getId();
-        String prefix = routePrefixMap.get(routeId);
-        if (prefix == null) {
-            return chain.filter(exchange);
-        }
-
-        // 5. 截取服务路径
-        String servicePath = gatewayPath.startsWith(prefix)
-                ? gatewayPath.substring(prefix.length())
-                : gatewayPath;
-        if (!servicePath.startsWith("/")) {
-            servicePath = "/" + servicePath;
-        }
+        
+        // 5. 从网关路径中提取服务路径（约定：/api/{service-name}/** → /{context-path}/**）
+        // 例如：/api/storage/files/list → routeId=duke-storage → servicePath=/files/list
+        String servicePath = extractServicePath(gatewayPath, routeId);
 
         // 6. 调用权限校验接口
         String finalServicePath = servicePath;
@@ -109,11 +85,53 @@ public class ApiPermissionFilter implements GlobalFilter, Ordered {
                 .onErrorReturn(false)
                 .flatMap(allowed -> {
                     if (Boolean.TRUE.equals(allowed)) {
-                        return chain.filter(exchange);
+                        // 获取用户权限列表并放入 Header（供微服务 @PreAuthorize 使用）
+                        return authCenterClient.getUserPermissions(userId)
+                                .subscribeOn(Schedulers.boundedElastic())
+                                .onErrorReturn(new ArrayList<>())  // 异常时返回空列表
+                                .map((java.util.List<String> permissions) -> {
+                                    ServerHttpRequest.Builder requestBuilder = exchange.getRequest().mutate();
+                                    
+                                    // 无论权限列表是否为空，都添加 Header（空字符串表示无权限）
+                                    if (permissions != null && !permissions.isEmpty()) {
+                                        String permissionsStr = String.join(",", permissions);
+                                        requestBuilder.header("X-User-Permissions", permissionsStr);
+                                        log.debug("用户权限已传递: userId={}, permissions={}", userId, permissionsStr);
+                                    } else {
+                                        requestBuilder.header("X-User-Permissions", "");
+                                        log.debug("用户无权限: userId={}", userId);
+                                    }
+                                    
+                                    ServerHttpRequest mutatedRequest = requestBuilder.build();
+                                    return exchange.mutate().request(mutatedRequest).build();
+                                })
+                                .flatMap(chain::filter);
                     }
                     log.warn("权限不足 userId={}, route={}, path={}", userId, routeId, finalServicePath);
                     return writeResponse(exchange.getResponse(), HttpStatus.FORBIDDEN, 403, "无权限访问");
                 });
+    }
+
+    /**
+     * 从网关路径提取服务路径
+     * 约定：路由 ID 格式为 duke-{service-name}，网关路径格式为 /api/{service-name}/**
+     * 例如：routeId=duke-storage, gatewayPath=/api/storage/files/list → /files/list
+     */
+    private String extractServicePath(String gatewayPath, String routeId) {
+        // 从路由 ID 提取服务名称（去掉 "duke-" 前缀）
+        String serviceName = routeId.startsWith("duke-") ? routeId.substring(5) : routeId;
+        
+        // 构造期望的前缀：/api/{service-name}
+        String expectedPrefix = "/api/" + serviceName;
+        
+        // 如果路径以期望的前缀开头，去掉前缀
+        if (gatewayPath.startsWith(expectedPrefix)) {
+            String servicePath = gatewayPath.substring(expectedPrefix.length());
+            return servicePath.isEmpty() ? "/" : servicePath;
+        }
+        
+        // 否则返回原路径
+        return gatewayPath;
     }
 
     private Mono<Void> writeResponse(ServerHttpResponse response, HttpStatus status, int code, String msg) {

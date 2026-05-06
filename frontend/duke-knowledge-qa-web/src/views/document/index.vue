@@ -114,24 +114,35 @@
           </el-table-column>
           <el-table-column prop="fileType" label="类型" width="70" align="center"/>
           <el-table-column prop="createTime" label="创建时间" width="160" align="center" show-overflow-tooltip/>
-          <el-table-column label="操作" width="140" align="center" fixed="right">
+          <el-table-column label="操作" width="180" align="center" fixed="right">
             <template #default="{ row }">
-              <el-button
-                  type="primary"
-                  size="small"
-                  text
-                  @click="handlePreview(row)"
-              >
-                预览
-              </el-button>
-              <el-button
-                  type="danger"
-                  size="small"
-                  text
-                  @click="handleDelete(row.id)"
-              >
-                删除
-              </el-button>
+              <div style="display: flex; justify-content: center; gap: 4px;">
+                <el-button
+                    type="primary"
+                    size="small"
+                    text
+                    @click="handlePreview(row)"
+                >
+                  预览
+                </el-button>
+                <el-button
+                    type="success"
+                    size="small"
+                    text
+                    :icon="Download"
+                    @click="handleDownloadRow(row)"
+                >
+                  下载
+                </el-button>
+                <el-button
+                    type="danger"
+                    size="small"
+                    text
+                    @click="handleDelete(row.id)"
+                >
+                  删除
+                </el-button>
+              </div>
             </template>
           </el-table-column>
         </el-table>
@@ -161,13 +172,13 @@
       <!-- PDF -->
       <iframe
           v-if="previewDoc?.fileType === 'pdf'"
-          :src="previewDoc.fileUrl"
-          style="width: 100%; height: calc(100vh - 60px); border: none"
+          :src="pdfUrl"
+          style="width: 100%; height: calc(100vh - 60px); border: none; font-size: small"
       />
       <!-- TXT / MD -->
       <div
           v-else-if="['txt', 'md'].includes(previewDoc?.fileType ?? '')"
-          style="height: calc(100vh - 60px); overflow: auto; padding: 16px"
+          style="height: calc(100vh - 60px); overflow: auto; padding: 4px; font-size: small"
       >
         <div
             v-if="previewDoc?.fileType === 'md'"
@@ -180,10 +191,10 @@
       <div
           v-else-if="['docx', 'doc'].includes(previewDoc?.fileType ?? '')"
           ref="docxContainer"
-          style="height: calc(100vh - 60px); overflow: auto; padding: 16px; background: #fff"
+          style="height: calc(100vh - 60px); overflow: auto; padding: 4px; background: #fff; font-size: small"
       />
       <!-- 未知类型兜底 -->
-      <div v-else style="padding: 40px; text-align: center; color: #999">
+      <div v-else style="padding: 40px; text-align: center; color: #999; font-size: small">
         暂不支持该格式预览
       </div>
     </el-drawer>
@@ -191,12 +202,15 @@
 </template>
 
 <script setup lang="ts">
-import {ref, reactive, onMounted, nextTick} from 'vue'
+import {ref, reactive, onMounted, nextTick, watch} from 'vue'
 import {ElMessage, ElMessageBox} from 'element-plus'
+import {Download} from '@element-plus/icons-vue'
 import {marked} from 'marked'
 import {renderAsync} from 'docx-preview'
 import {useDocumentStore} from '@/stores/documentStore'
 import type {Document, DocumentQueryDTO} from '@/types/document'
+import {getToken} from '@/utils/request'
+import {downloadFile} from '@/api/document'
 
 const docStore = useDocumentStore()
 
@@ -210,6 +224,7 @@ const previewVisible = ref(false)
 const previewDoc = ref<Document | null>(null)
 const previewText = ref('')
 const previewHtml = ref('')
+const pdfUrl = ref('') // PDF Blob URL
 const docxContainer = ref<HTMLElement | null>(null)
 const query = reactive<DocumentQueryDTO>({
   category: '',
@@ -232,14 +247,6 @@ async function loadData() {
 async function handleUpload(options: any) {
   const formData = new FormData()
   formData.append('file', options.file)
-  formData.append('category', uploadCategory.value || '其他')
-
-  // 将标签字符串转换为数组
-  const tags = uploadTags.value
-      .split(',')
-      .map(tag => tag.trim())
-      .filter(tag => tag.length > 0)
-  formData.append('tags', JSON.stringify(tags))
 
   loading.value = true
   try {
@@ -262,21 +269,32 @@ async function handlePreview(row: Document) {
   previewDoc.value = row
   previewText.value = ''
   previewHtml.value = ''
+  pdfUrl.value = '' // 清空 PDF URL
   previewVisible.value = true
 
   const type = (row.fileType || '').toLowerCase()
   console.log('预览文件类型:', type, '完整数据:', row)
 
+  // 使用 duke-storage 的预览接口
+  const previewUrl = `/api/storage/files/preview/${row.id}`
+  
+  // 获取 token
+  const token = getToken()
+  const headers: HeadersInit = {}
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+
   if (type === 'txt') {
     try {
-      const res = await fetch(row.fileUrl)
+      const res = await fetch(previewUrl, { headers })
       previewText.value = await res.text()
     } catch (error) {
       ElMessage.error('加载文本文件失败: ' + (error as any).message)
     }
   } else if (type === 'md') {
     try {
-      const res = await fetch(row.fileUrl)
+      const res = await fetch(previewUrl, { headers })
       const text = await res.text()
       previewHtml.value = await marked.parse(text)
     } catch (error) {
@@ -285,18 +303,117 @@ async function handlePreview(row: Document) {
   } else if (type === 'docx' || type === 'doc') {
     try {
       await nextTick()
-      const res = await fetch(row.fileUrl)
+      const res = await fetch(previewUrl, { headers })
+      
+      // 检查响应状态
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`)
+      }
+      
+      // 检查内容类型
+      const contentType = res.headers.get('content-type')
+      console.log('Word 文件 Content-Type:', contentType)
+      
+      // 获取 ArrayBuffer
       const buffer = await res.arrayBuffer()
+      console.log('Word 文件大小:', buffer.byteLength, 'bytes')
+      
+      // 验证是否为有效的 ZIP 文件（DOCX 本质是 ZIP）
+      if (buffer.byteLength < 4) {
+        throw new Error('文件太小，可能不是有效的 DOCX 文件')
+      }
+      
+      // 检查 ZIP 文件头（PK\x03\x04）
+      const uint8Array = new Uint8Array(buffer)
+      const isZip = uint8Array[0] === 0x50 && uint8Array[1] === 0x4b
+      console.log('是否为 ZIP 格式:', isZip)
+      
+      if (!isZip) {
+        console.warn('文件不是标准的 ZIP 格式，但仍尝试渲染')
+      }
+      
       if (docxContainer.value) {
-        await renderAsync(buffer, docxContainer.value)
+        await renderAsync(buffer, docxContainer.value, undefined, {
+          className: 'docx-preview',
+          inWrapper: true,
+          ignoreWidth: false,
+          ignoreHeight: false,
+          ignoreFonts: false,
+          breakPages: true,
+          ignoreLastRenderedPageBreak: true,
+          experimentalCacheTables: false,
+          useBase64URL: false,
+          debug: false
+        })
       }
     } catch (error) {
+      console.error('Word 预览错误详情:', error)
       ElMessage.error('加载 Word 文件失败: ' + (error as any).message)
     }
   } else if (type === 'pdf') {
-    // PDF 直接用 iframe，无需处理
+    try {
+      const res = await fetch(previewUrl, { headers })
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`)
+      }
+      const blob = await res.blob()
+      // 创建 Blob URL
+      pdfUrl.value = URL.createObjectURL(blob)
+    } catch (error) {
+      ElMessage.error('加载 PDF 文件失败: ' + (error as any).message)
+    }
   } else {
     ElMessage.warning('暂不支持此格式预览: ' + type)
+  }
+}
+
+// 下载文件
+async function handleDownload() {
+  if (!previewDoc.value) return
+  
+  try {
+    const blob = await downloadFile(previewDoc.value.id)
+    
+    // 创建下载链接
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = previewDoc.value.title || 'download'
+    document.body.appendChild(link)
+    link.click()
+    
+    // 清理
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
+    
+    ElMessage.success('下载成功')
+  } catch (error) {
+    console.error('下载失败:', error)
+    ElMessage.error('下载失败，请重试')
+  }
+}
+
+// 表格行下载
+async function handleDownloadRow(row: Document) {
+  try {
+    const blob = await downloadFile(row.id)
+    
+    // 创建下载链接
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = row.title || 'download'
+    document.body.appendChild(link)
+    link.click()
+    
+    // 清理
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
+    
+    ElMessage.success('下载成功')
+  } catch (error) {
+    console.error('下载失败:', error)
+    ElMessage.error('下载失败，请重试')
   }
 }
 
@@ -326,6 +443,14 @@ function getStatusType(status: string): string {
   }
   return statusMap[status] || 'info'
 }
+
+// 监听抽屉关闭，清理 Blob URL
+watch(previewVisible, (visible) => {
+  if (!visible && pdfUrl.value) {
+    URL.revokeObjectURL(pdfUrl.value)
+    pdfUrl.value = ''
+  }
+})
 
 onMounted(() => {
   loadData()
@@ -711,6 +836,40 @@ onMounted(() => {
 
   :deep(th) {
     background: #f6f8fa;
+  }
+}
+
+// Word 预览样式
+.docx-preview {
+  :deep(.docx-wrapper) {
+    background: white;
+    padding: 20px;
+  }
+
+  :deep(p) {
+    margin: 0.5em 0;
+    line-height: 1.6;
+  }
+
+  :deep(h1), :deep(h2), :deep(h3), :deep(h4), :deep(h5), :deep(h6) {
+    margin: 1em 0 0.5em;
+    font-weight: 600;
+  }
+
+  :deep(table) {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1em 0;
+  }
+
+  :deep(td), :deep(th) {
+    border: 1px solid #ddd;
+    padding: 8px;
+  }
+
+  :deep(img) {
+    max-width: 100%;
+    height: auto;
   }
 }
 

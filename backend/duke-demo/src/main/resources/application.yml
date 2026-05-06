@@ -41,3 +41,4 @@ swagger:
   version: 1.0.0
   enable-security: true
   server-url: http://localhost:8080/api/demo
+
