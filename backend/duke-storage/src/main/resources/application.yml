@@ -1,0 +1,59 @@
+server:
+  port: 9000
+  servlet:
+    context-path: /storage
+
+spring:
+  application:
+    name: duke-storage
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 100MB
+      max-request-size: 100MB
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/duke_storage?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai
+    username: root
+    password: root
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+        username: nacos
+        password: nacos
+      config:
+        server-addr: 127.0.0.1:8848
+        username: nacos
+        password: nacos
+        file-extension: yml
+
+  config:
+    import:
+      - nacos:duke-common.yml?refreshEnabled=true
+      - nacos:duke-storage.yml?refreshEnabled=true
+
+# 文件服务配置
+file:
+  local-base-path: D:/duke-storage/upload/
+  chunk-temp-path: D:/duke-storage/temp/
+  allow-suffix: pdf,doc,docx,txt,xlsx,png,jpg,jpeg,gif,bmp,md
+  max-file-size: 50
+  chunk-size: 5
+  chunk-expire-day: 7
+  delete-expire-day: 30
+
+# MinIO配置
+minio:
+  enable: false
+  endpoint: http://127.0.0.1:9000
+  access-key: minioadmin
+  secret-key: minioadmin
+  bucket-name: duke-file-bucket
+
+swagger:
+  title: 文件服务 API
+  description: 文件服务接口文档
+  version: 1.0.0
+  enable-security: true
+  server-url: http://localhost:8080/api/storage

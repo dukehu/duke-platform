@@ -1137,7 +1137,7 @@ mkdir -p duke-knowledge-qa/src/test/java
 #### 3. 创建应用启动类
 
 ```java
-// src/main/java/com/duke/knowledge_qa/KnowledgeQaApplication.java
+// src/main/java/com/duke/knowledge_qa/StorageApplication.java
 package com.duke.knowledge_qa;
 
 import org.springframework.boot.SpringApplication;

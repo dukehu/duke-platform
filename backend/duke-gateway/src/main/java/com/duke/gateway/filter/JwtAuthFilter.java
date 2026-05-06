@@ -61,7 +61,9 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
             "/api/auth/v3/api-docs/**",
             "/api/transformer/v3/api-docs/**",
             "/api/knowledge-qa/v3/api-docs/**",
-            "/api/demo/v3/api-docs/**"
+            "/api/demo/v3/api-docs/**",
+            // 文件预览直接放过
+            "/api/knowledge-qa/files/**"
     );
 
     // 需要从外部请求中剥离的敏感请求头，防止客户端伪造用户身份

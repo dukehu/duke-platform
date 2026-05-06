@@ -5,7 +5,9 @@
       <div class="upload-wrapper">
         <div class="upload-header">
           <div class="title-section">
-            <el-icon class="upload-icon"><UploadFilled /></el-icon>
+            <el-icon class="upload-icon">
+              <UploadFilled/>
+            </el-icon>
             <h3>上传文档</h3>
           </div>
         </div>
@@ -14,24 +16,24 @@
           <div class="option-group">
             <label>分类</label>
             <el-select
-              v-model="uploadCategory"
-              placeholder="选择分类"
-              size="small"
-              class="category-selector"
+                v-model="uploadCategory"
+                placeholder="选择分类"
+                size="small"
+                class="category-selector"
             >
-              <el-option label="技术文档" value="技术文档" />
-              <el-option label="业务文档" value="业务文档" />
-              <el-option label="其他" value="其他" />
+              <el-option label="技术文档" value="技术文档"/>
+              <el-option label="业务文档" value="业务文档"/>
+              <el-option label="其他" value="其他"/>
             </el-select>
           </div>
 
           <div class="option-group">
             <label>标签</label>
             <el-input
-              v-model="uploadTags"
-              placeholder="用逗号分隔，如：AI,LLM"
-              size="small"
-              class="tags-input"
+                v-model="uploadTags"
+                placeholder="用逗号分隔，如：AI,LLM"
+                size="small"
+                class="tags-input"
             />
           </div>
         </div>
@@ -39,12 +41,12 @@
         <p class="upload-hint">支持 PDF、Word、TXT、Markdown 格式</p>
 
         <el-upload
-          drag
-          action="#"
-          :auto-upload="true"
-          :http-request="handleUpload"
-          accept=".pdf,.doc,.docx,.txt,.md"
-          multiple
+            drag
+            action="#"
+            :auto-upload="true"
+            :http-request="handleUpload"
+            accept=".pdf,.doc,.docx,.txt,.md"
+            multiple
         >
           <div class="upload-content">
             <div class="drag-hint">拖放文件到此，或<em>点击上传</em></div>
@@ -52,9 +54,9 @@
           </div>
         </el-upload>
         <el-progress
-          v-if="uploadProgress > 0 && uploadProgress < 100"
-          :percentage="uploadProgress"
-          class="upload-progress"
+            v-if="uploadProgress > 0 && uploadProgress < 100"
+            :percentage="uploadProgress"
+            class="upload-progress"
         />
       </div>
     </div>
@@ -68,24 +70,26 @@
       <!-- 搜索过滤 -->
       <div class="filter-bar">
         <el-input
-          v-model="query.keyword"
-          placeholder="搜索文档名称..."
-          clearable
-          class="search-input"
+            v-model="query.keyword"
+            placeholder="搜索文档名称..."
+            clearable
+            class="search-input"
         >
           <template #prefix>
-            <el-icon><Search /></el-icon>
+            <el-icon>
+              <Search/>
+            </el-icon>
           </template>
         </el-input>
         <el-select
-          v-model="query.category"
-          placeholder="选择分类"
-          clearable
-          class="category-select"
+            v-model="query.category"
+            placeholder="选择分类"
+            clearable
+            class="category-select"
         >
-          <el-option label="技术文档" value="技术文档" />
-          <el-option label="业务文档" value="业务文档" />
-          <el-option label="其他" value="其他" />
+          <el-option label="技术文档" value="技术文档"/>
+          <el-option label="业务文档" value="业务文档"/>
+          <el-option label="其他" value="其他"/>
         </el-select>
         <el-button type="primary" @click="loadData" class="search-btn">搜索</el-button>
         <el-button @click="resetQuery" class="reset-btn">重置</el-button>
@@ -94,8 +98,8 @@
       <!-- 文档表格 -->
       <div class="table-container" v-loading="loading">
         <el-table :data="documents" stripe>
-          <el-table-column prop="title" label="文档名称" min-width="200" show-overflow-tooltip />
-          <el-table-column prop="category" label="分类" width="100" align="center" />
+          <el-table-column prop="title" label="文档名称" min-width="200" show-overflow-tooltip/>
+          <el-table-column prop="category" label="分类" width="100" align="center"/>
           <el-table-column label="标签" min-width="140">
             <template #default="{ row }">
               <div class="tag-group">
@@ -108,23 +112,23 @@
               <el-tag :type="(getStatusType(row.status) as any)" size="small">{{ row.status }}</el-tag>
             </template>
           </el-table-column>
-          <el-table-column prop="fileType" label="类型" width="70" align="center" />
-          <el-table-column prop="createTime" label="创建时间" width="160" align="center" show-overflow-tooltip />
+          <el-table-column prop="fileType" label="类型" width="70" align="center"/>
+          <el-table-column prop="createTime" label="创建时间" width="160" align="center" show-overflow-tooltip/>
           <el-table-column label="操作" width="140" align="center" fixed="right">
             <template #default="{ row }">
               <el-button
-                type="primary"
-                size="small"
-                text
-                @click="handlePreview(row)"
+                  type="primary"
+                  size="small"
+                  text
+                  @click="handlePreview(row)"
               >
                 预览
               </el-button>
               <el-button
-                type="danger"
-                size="small"
-                text
-                @click="handleDelete(row.id)"
+                  type="danger"
+                  size="small"
+                  text
+                  @click="handleDelete(row.id)"
               >
                 删除
               </el-button>
@@ -135,12 +139,12 @@
         <!-- 分页 -->
         <div class="pagination-wrapper">
           <el-pagination
-            v-model:current-page="query.current"
-            v-model:page-size="query.size"
-            :page-sizes="[10, 20, 50]"
-            :total="total"
-            layout="total, sizes, prev, pager, next, jumper"
-            @change="loadData"
+              v-model:current-page="query.current"
+              v-model:page-size="query.size"
+              :page-sizes="[10, 20, 50]"
+              :total="total"
+              layout="total, sizes, prev, pager, next, jumper"
+              @change="loadData"
           />
         </div>
       </div>
@@ -148,35 +152,35 @@
 
     <!-- 文件预览抽屉 -->
     <el-drawer
-      v-model="previewVisible"
-      :title="previewDoc?.title"
-      direction="rtl"
-      size="50%"
-      destroy-on-close
+        v-model="previewVisible"
+        :title="previewDoc?.title"
+        direction="rtl"
+        size="50%"
+        destroy-on-close
     >
       <!-- PDF -->
       <iframe
-        v-if="previewDoc?.fileType === 'pdf'"
-        :src="previewDoc.fileUrl"
-        style="width: 100%; height: calc(100vh - 60px); border: none"
+          v-if="previewDoc?.fileType === 'pdf'"
+          :src="previewDoc.fileUrl"
+          style="width: 100%; height: calc(100vh - 60px); border: none"
       />
       <!-- TXT / MD -->
       <div
-        v-else-if="['txt', 'md'].includes(previewDoc?.fileType ?? '')"
-        style="height: calc(100vh - 60px); overflow: auto; padding: 16px"
+          v-else-if="['txt', 'md'].includes(previewDoc?.fileType ?? '')"
+          style="height: calc(100vh - 60px); overflow: auto; padding: 16px"
       >
         <div
-          v-if="previewDoc?.fileType === 'md'"
-          v-html="previewHtml"
-          class="markdown-body"
+            v-if="previewDoc?.fileType === 'md'"
+            v-html="previewHtml"
+            class="markdown-body"
         />
         <pre v-else style="white-space: pre-wrap; margin: 0">{{ previewText }}</pre>
       </div>
       <!-- DOCX / DOC -->
       <div
-        v-else-if="['docx', 'doc'].includes(previewDoc?.fileType ?? '')"
-        ref="docxContainer"
-        style="height: calc(100vh - 60px); overflow: auto; padding: 16px; background: #fff"
+          v-else-if="['docx', 'doc'].includes(previewDoc?.fileType ?? '')"
+          ref="docxContainer"
+          style="height: calc(100vh - 60px); overflow: auto; padding: 16px; background: #fff"
       />
       <!-- 未知类型兜底 -->
       <div v-else style="padding: 40px; text-align: center; color: #999">
@@ -187,12 +191,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, nextTick } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { marked } from 'marked'
-import { renderAsync } from 'docx-preview'
-import { useDocumentStore } from '@/stores/documentStore'
-import type { Document, DocumentQueryDTO } from '@/types/document'
+import {ref, reactive, onMounted, nextTick} from 'vue'
+import {ElMessage, ElMessageBox} from 'element-plus'
+import {marked} from 'marked'
+import {renderAsync} from 'docx-preview'
+import {useDocumentStore} from '@/stores/documentStore'
+import type {Document, DocumentQueryDTO} from '@/types/document'
 
 const docStore = useDocumentStore()
 
@@ -232,9 +236,9 @@ async function handleUpload(options: any) {
 
   // 将标签字符串转换为数组
   const tags = uploadTags.value
-    .split(',')
-    .map(tag => tag.trim())
-    .filter(tag => tag.length > 0)
+      .split(',')
+      .map(tag => tag.trim())
+      .filter(tag => tag.length > 0)
   formData.append('tags', JSON.stringify(tags))
 
   loading.value = true
@@ -298,7 +302,7 @@ async function handlePreview(row: Document) {
 
 async function handleDelete(id: number) {
   try {
-    await ElMessageBox.confirm('确认删除该文档？', '提示', { type: 'warning' })
+    await ElMessageBox.confirm('确认删除该文档？', '提示', {type: 'warning'})
     await docStore.deleteDocument(id)
     ElMessage.success('删除成功')
     await loadData()
@@ -464,7 +468,11 @@ onMounted(() => {
           font-weight: 500;
           font-size: 13px;
           margin-bottom: 4px;
-          em { color: #4F6EF7; font-style: normal; }
+
+          em {
+            color: #4F6EF7;
+            font-style: normal;
+          }
         }
 
         .file-size-hint {
@@ -606,24 +614,104 @@ onMounted(() => {
   line-height: 1.6;
   color: #333;
 
-  :deep(h1) { font-size: 2em; margin: 0.67em 0; border-bottom: 1px solid #eee; padding-bottom: 0.3em; }
-  :deep(h2) { font-size: 1.5em; margin: 0.75em 0; border-bottom: 1px solid #eee; padding-bottom: 0.3em; }
-  :deep(h3) { font-size: 1.25em; margin: 0.83em 0; }
-  :deep(h4) { font-size: 1em; margin: 1em 0; }
-  :deep(h5) { font-size: 0.875em; margin: 1.17em 0; }
-  :deep(h6) { font-size: 0.75em; margin: 1.33em 0; color: #666; }
+  :deep(h1) {
+    font-size: 2em;
+    margin: 0.67em 0;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 0.3em;
+  }
 
-  :deep(p) { margin: 0.5em 0; }
-  :deep(pre) { background: #f6f8fa; border: 1px solid #ddd; border-radius: 3px; padding: 1em; overflow: auto; }
-  :deep(code) { background: #f6f8fa; padding: 2px 4px; border-radius: 3px; font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; }
-  :deep(blockquote) { border-left: 4px solid #ddd; margin: 0; padding-left: 1em; color: #666; }
-  :deep(ul) { margin: 0.5em 0; padding-left: 2em; }
-  :deep(ol) { margin: 0.5em 0; padding-left: 2em; }
-  :deep(li) { margin: 0.25em 0; }
-  :deep(a) { color: #4F6EF7; text-decoration: none; &:hover { text-decoration: underline; } }
-  :deep(table) { border-collapse: collapse; width: 100%; margin: 0.5em 0; }
-  :deep(th), :deep(td) { border: 1px solid #ddd; padding: 0.5em; }
-  :deep(th) { background: #f6f8fa; }
+  :deep(h2) {
+    font-size: 1.5em;
+    margin: 0.75em 0;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 0.3em;
+  }
+
+  :deep(h3) {
+    font-size: 1.25em;
+    margin: 0.83em 0;
+  }
+
+  :deep(h4) {
+    font-size: 1em;
+    margin: 1em 0;
+  }
+
+  :deep(h5) {
+    font-size: 0.875em;
+    margin: 1.17em 0;
+  }
+
+  :deep(h6) {
+    font-size: 0.75em;
+    margin: 1.33em 0;
+    color: #666;
+  }
+
+  :deep(p) {
+    margin: 0.5em 0;
+  }
+
+  :deep(pre) {
+    background: #f6f8fa;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    padding: 1em;
+    overflow: auto;
+  }
+
+  :deep(code) {
+    background: #f6f8fa;
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  }
+
+  :deep(blockquote) {
+    border-left: 4px solid #ddd;
+    margin: 0;
+    padding-left: 1em;
+    color: #666;
+  }
+
+  :deep(ul) {
+    margin: 0.5em 0;
+    padding-left: 2em;
+  }
+
+  :deep(ol) {
+    margin: 0.5em 0;
+    padding-left: 2em;
+  }
+
+  :deep(li) {
+    margin: 0.25em 0;
+  }
+
+  :deep(a) {
+    color: #4F6EF7;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  :deep(table) {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 0.5em 0;
+  }
+
+  :deep(th), :deep(td) {
+    border: 1px solid #ddd;
+    padding: 0.5em;
+  }
+
+  :deep(th) {
+    background: #f6f8fa;
+  }
 }
 
 @media (max-width: 768px) {

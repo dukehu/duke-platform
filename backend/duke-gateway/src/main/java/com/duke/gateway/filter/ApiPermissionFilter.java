@@ -58,7 +58,9 @@ public class ApiPermissionFilter implements GlobalFilter, Ordered {
             "/api/auth/v3/api-docs/**",
             "/api/transformer/v3/api-docs/**",
             "/api/knowledge-qa/v3/api-docs/**",
-            "/api/demo/v3/api-docs/**"
+            "/api/demo/v3/api-docs/**",
+            // 文件预览直接放过
+            "/api/knowledge-qa/files/**"
     );
 
     @Override
